@@ -56,8 +56,8 @@ export async function getAccessToken(): Promise<string> {
   return cachedToken.value;
 }
 
-async function call<T = unknown>(
-  method: "GET" | "POST",
+export async function call<T = unknown>(
+  method: "GET" | "POST" | "DELETE",
   path: string,
   body?: unknown,
   requestId?: string,
@@ -158,6 +158,8 @@ export const approveUrlOf = (order: PayPalOrder): string | undefined =>
 export async function verifyWebhookSignature(headers: Headers, rawBody: string): Promise<boolean> {
   const webhookId = process.env.PAYPAL_WEBHOOK_ID;
   if (!webhookId) throw new Error("PAYPAL_WEBHOOK_ID missing");
+  // No PayPal signature headers at all: not from PayPal, no need to ask.
+  if (!headers.get("paypal-transmission-sig")) return false;
   const result = await call<{ verification_status: string }>("POST", "/v1/notifications/verify-webhook-signature", {
     auth_algo: headers.get("paypal-auth-algo"),
     cert_url: headers.get("paypal-cert-url"),
