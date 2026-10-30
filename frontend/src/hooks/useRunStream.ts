@@ -11,8 +11,11 @@ import { EMPTY_RUN_VIEW, foldRunEvents, type RunView } from "@/lib/runView";
 
 type Handlers = { onEvent: (event: RunEvent) => void; onError: (message: string) => void };
 
+/** Only deliver events after this seq (used to resume a run after approval). */
+type SourceOptions = { afterSeq?: number };
+
 /** Starts streaming a run and returns a function that stops it. */
-export type RunSource = (runId: string, handlers: Handlers) => () => void;
+export type RunSource = (runId: string, handlers: Handlers, options?: SourceOptions) => () => void;
 
 /** Replays the recorded mock events for a run, one every `intervalMs`. */
 export function mockRunSource(intervalMs = 700): RunSource {
@@ -34,7 +37,8 @@ export function mockRunSource(intervalMs = 700): RunSource {
 }
 
 /** The real stream. The server replays stored events first, so reconnecting is safe. */
-export const sseRunSource: RunSource = (runId, { onEvent, onError }) => {
+export const sseRunSource: RunSource = (runId, { onEvent, onError }, options = {}) => {
+  const afterSeq = options.afterSeq ?? 0;
   const source = new EventSource(`/api/runs/${encodeURIComponent(runId)}/stream`);
   source.onmessage = (message) => {
     let data: unknown;
@@ -49,6 +53,8 @@ export const sseRunSource: RunSource = (runId, { onEvent, onError }) => {
       onError("A run event did not match the contract.");
       return;
     }
+    // A resumed stream replays from seq 1; skip what the view already has (including an earlier `done`).
+    if (parsed.data.seq <= afterSeq) return;
     onEvent(parsed.data);
     if (parsed.data.type === "done") source.close();
   };
@@ -74,29 +80,47 @@ export function useRunStream(source: RunSource) {
     setStreamError(null);
   }, []);
 
+  const handlers = useCallback(
+    () => ({
+      onEvent: (event: RunEvent) => {
+        setEvents((prev) => (prev.some((e) => e.seq === event.seq) ? prev : [...prev, event]));
+        if (event.type === "done") setState("done");
+      },
+      onError: (message: string) => {
+        setStreamError(message);
+        setState("error");
+      },
+    }),
+    [],
+  );
+
   const start = useCallback(
     (runId: string) => {
       stopRef.current();
       setEvents([]);
       setStreamError(null);
       setState("streaming");
-      stopRef.current = source(runId, {
-        onEvent: (event) => {
-          setEvents((prev) => (prev.some((e) => e.seq === event.seq) ? prev : [...prev, event]));
-          if (event.type === "done") setState("done");
-        },
-        onError: (message) => {
-          setStreamError(message);
-          setState("error");
-        },
-      });
+      stopRef.current = source(runId, handlers());
     },
-    [source],
+    [source, handlers],
+  );
+
+  /** Follows a run again after it continued on the server (e.g. approved), keeping what is shown. */
+  const resume = useCallback(
+    (runId: string, afterSeq: number) => {
+      stopRef.current();
+      setStreamError(null);
+      setState("streaming");
+      stopRef.current = source(runId, handlers(), { afterSeq });
+    },
+    [source, handlers],
   );
 
   useEffect(() => () => stopRef.current(), []);
 
   const view: RunView = useMemo(() => (events.length ? foldRunEvents(events) : EMPTY_RUN_VIEW), [events]);
 
-  return { view, state, streamError, start, reset };
+  const lastSeq = events.reduce((max, e) => Math.max(max, e.seq), 0);
+
+  return { view, state, streamError, start, resume, reset, lastSeq };
 }

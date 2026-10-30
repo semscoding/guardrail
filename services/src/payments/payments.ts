@@ -1,6 +1,6 @@
 // Payment records and PayPal webhook handling. The webhook is the final word on whether money moved.
 
-import { db } from "@guardrail/database";
+import { db, type Queryable } from "@guardrail/database";
 
 export type PaymentStatus = "AUTHORIZED" | "CAPTURED" | "CAPTURE_PENDING" | "CAPTURE_DENIED" | "VOIDED";
 
@@ -28,13 +28,40 @@ export async function recordPayment(p: {
   currency: string;
   payeeEmail: string | undefined;
   status: PaymentStatus;
-}) {
-  await (await db()).query(
-    `INSERT INTO payments (order_id, authorization_id, shop_id, description, amount, currency, payee_email, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+  /** The agent run that created this payment (pillar 1). */
+  runId?: string;
+}, tx?: Queryable) {
+  await (tx ?? (await db())).query(
+    `INSERT INTO payments (order_id, authorization_id, shop_id, description, amount, currency, payee_email, status, run_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      ON CONFLICT (order_id) DO UPDATE SET status = EXCLUDED.status, updated_at = now()`,
-    [p.orderId, p.authorizationId, p.shopId, p.description, p.amount, p.currency, p.payeeEmail ?? null, p.status],
+    [p.orderId, p.authorizationId, p.shopId, p.description, p.amount, p.currency, p.payeeEmail ?? null, p.status, p.runId ?? null],
   );
+}
+
+/**
+ * Our own view of a capture or void. Never overrides a status a verified webhook already confirmed:
+ * the webhook is the final word.
+ */
+export async function updatePaymentStatus(
+  p: { orderId: string; status: PaymentStatus; captureId?: string | null },
+  tx?: Queryable,
+) {
+  await (tx ?? (await db())).query(
+    `UPDATE payments SET status = $2, capture_id = COALESCE($3, capture_id), updated_at = now()
+     WHERE order_id = $1 AND webhook_verified = false`,
+    [p.orderId, p.status, p.captureId ?? null],
+  );
+}
+
+/** Sum of captured payments since `since` (start of the month for rule R2), in integer cents per currency. */
+export async function capturedSpendSince(since: Date, currency: string, tx?: Queryable): Promise<number> {
+  const { rows } = await (tx ?? (await db())).query<{ cents: string | number | null }>(
+    `SELECT COALESCE(SUM(ROUND(amount * 100)), 0)::bigint AS cents
+     FROM payments WHERE status = 'CAPTURED' AND currency = $2 AND created_at >= $1`,
+    [since.toISOString(), currency],
+  );
+  return Number(rows[0]?.cents ?? 0);
 }
 
 export async function listPayments(): Promise<Payment[]> {

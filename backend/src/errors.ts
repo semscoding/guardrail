@@ -23,6 +23,11 @@ function paypalDebugId(details: unknown): string | undefined {
 
 export function toAppError(err: unknown): AppError {
   if (err instanceof AppErrorException) return err.appError;
+  // Services carry a safe AppError on their own failure class (e.g. RunFailure), without importing backend.
+  if (err && typeof err === "object" && "appError" in err) {
+    const parsed = AppError.safeParse((err as { appError: unknown }).appError);
+    if (parsed.success) return parsed.data;
+  }
   if (err instanceof PayPalError) {
     return {
       code: "UPSTREAM",
