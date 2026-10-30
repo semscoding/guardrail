@@ -101,3 +101,25 @@ test("moneyToNumeric and numericToMoney convert integer cents without floating-p
     currency: "EUR",
   });
 });
+
+test("resetDatabase in production requires the caller's own token, never the server's env var", async () => {
+  const client = await createDbClient({ pgliteDir: "memory://" });
+  const saved = { env: process.env.NODE_ENV, token: process.env.DEMO_ADMIN_TOKEN };
+  const env = process.env as Record<string, string | undefined>;
+  try {
+    env.NODE_ENV = "production";
+    env.DEMO_ADMIN_TOKEN = "s3cret";
+    await assert.rejects(resetDatabase({ client }), /Refusing to reset/, "no token must be refused");
+    await assert.rejects(resetDatabase({ client, adminToken: "wrong" }), /Refusing to reset/);
+    delete env.DEMO_ADMIN_TOKEN;
+    await assert.rejects(resetDatabase({ client, adminToken: "s3cret" }), /Refusing to reset/, "no server token configured");
+    env.DEMO_ADMIN_TOKEN = "s3cret";
+    const ok = await resetDatabase({ client, adminToken: "s3cret" });
+    assert.equal(ok.migrations.applied.length, 5);
+  } finally {
+    env.NODE_ENV = saved.env;
+    if (saved.token === undefined) delete env.DEMO_ADMIN_TOKEN;
+    else env.DEMO_ADMIN_TOKEN = saved.token;
+    await client.close();
+  }
+});
