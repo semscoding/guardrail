@@ -1,4 +1,5 @@
 import { handleWebhookEvent } from "@guardrail/services/payments";
+import { handleDisputeWebhook, isDisputeEvent } from "@guardrail/services/disputes";
 import { verifyWebhookSignature } from "@guardrail/apis/paypal";
 
 export async function POST(request: Request) {
@@ -20,6 +21,13 @@ export async function POST(request: Request) {
   });
   const outcome = await handleWebhookEvent(event, verified);
   console.log(`[webhook] ${event.event_type} ${event.id} → ${outcome}`);
+
+  // Pillar 3: a fresh, verified dispute event (stored and de-duplicated above) goes to the Dispute Defender.
+  if (outcome === "ignored" && isDisputeEvent(event.event_type)) {
+    const dispute = await handleDisputeWebhook(event);
+    console.log(`[webhook] ${event.event_type} ${event.id} → dispute ${dispute}`);
+    return Response.json({ outcome: dispute });
+  }
 
   // Unverified events are stored for the audit trail but never change a payment.
   if (outcome === "rejected") return Response.json({ outcome }, { status: 401 });

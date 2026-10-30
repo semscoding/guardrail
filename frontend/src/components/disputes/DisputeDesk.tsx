@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, CircleAlert, FileCheck2, Package, ShieldCheck, Truck, type LucideIcon } from "lucide-react";
-import { formatMoney, type Dispute, type DisputeReason, type Evidence } from "@guardrail/apis/domain";
+import { CalendarClock, CircleAlert, FileCheck2, FilePen, Package, Send, ShieldCheck, Truck, type LucideIcon } from "lucide-react";
+import type { AppError } from "@guardrail/apis/contracts";
+import { formatMoney, type Dispute, type DisputeReason, type Dossier, type Evidence } from "@guardrail/apis/domain";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,16 +42,58 @@ const KIND_LABELS: Record<Evidence["kind"], string> = {
 const dateTime = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
 const date = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
-function daysLeft(due: string | null, now = new Date("2026-11-02T10:00:00Z")) {
-  // Fixed "now" for the mock demo; becomes Date.now() with live data.
+function daysLeft(due: string | null, now: Date) {
   if (!due) return null;
   return Math.ceil((Date.parse(due) - now.getTime()) / 86_400_000);
 }
 
-export function DisputeDesk({ disputes }: { disputes: Dispute[] }) {
-  const [selectedId, setSelectedId] = useState(disputes[0]?.id ?? null);
-  const [approved, setApproved] = useState<Record<string, boolean>>({});
+/** Calls one of our endpoints and unwraps { data } / { error }. */
+async function callApi<T>(path: string, method: "GET" | "POST" = "GET", body?: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method,
+    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const json = (await res.json().catch(() => null)) as { data?: T; error?: AppError } | null;
+  if (!res.ok || !json || json.error || json.data === undefined) {
+    throw new Error(json?.error?.message ?? "The server did not answer. Try again.");
+  }
+  return json.data;
+}
+
+type Action = "draft" | "approve" | "submit";
+
+/**
+ * `now` comes from the server render so the deadline countdown is the same on server and client.
+ * Without `live` (mock data) the actions are hidden.
+ */
+export function DisputeDesk({ disputes: initial, now, live = false }: { disputes: Dispute[]; now: string; live?: boolean }) {
+  const [disputes, setDisputes] = useState(initial);
+  const [selectedId, setSelectedId] = useState(initial[0]?.id ?? null);
+  const [pending, setPending] = useState<Action | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const selected = disputes.find((d) => d.id === selectedId) ?? null;
+  const nowDate = new Date(now);
+
+  async function run(action: Action, dispute: Dispute) {
+    setPending(action);
+    setError(null);
+    try {
+      const base = `/api/disputes/${encodeURIComponent(dispute.id)}`;
+      let next: Dispute;
+      if (action === "draft") {
+        await callApi<Dossier>(`${base}/dossier`, "POST");
+        next = await callApi<Dispute>(base);
+      } else {
+        next = await callApi<Dispute>(`${base}/${action}`, "POST", { dossierVersion: dispute.dossier!.version });
+      }
+      setDisputes((all) => all.map((d) => (d.id === next.id ? next : d)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setPending(null);
+    }
+  }
 
   if (!disputes.length) {
     return <p className="text-sm text-ink-muted">No open disputes. New PayPal disputes appear here within minutes.</p>;
@@ -64,7 +107,7 @@ export function DisputeDesk({ disputes }: { disputes: Dispute[] }) {
         </h2>
         <ul>
           {disputes.map((d) => {
-            const left = daysLeft(d.sellerResponseDue);
+            const left = daysLeft(d.sellerResponseDue, nowDate);
             const active = d.id === selectedId;
             return (
               <li key={d.id} className="border-b border-border last:border-b-0">
@@ -97,24 +140,51 @@ export function DisputeDesk({ disputes }: { disputes: Dispute[] }) {
 
       {selected ? (
         <DisputeDetail
+          key={selected.id}
           dispute={selected}
-          approved={approved[selected.id] ?? false}
-          onApprove={() => setApproved((a) => ({ ...a, [selected.id]: true }))}
+          live={live}
+          pending={pending}
+          error={error}
+          onAction={(action) => run(action, selected)}
         />
       ) : null}
     </div>
   );
 }
 
+const DRAFTED_BY: Record<NonNullable<Dossier["draftedBy"]>, string> = {
+  ai: "Drafted by AI from the evidence above. Every paragraph cites its evidence; nothing is sent until you approve.",
+  template: "Drafted from a template in offline test mode, no AI. Every paragraph cites its evidence; nothing is sent until you approve.",
+  demo_seed: "Pre-written demo draft, not AI. Draft again to build it from the collected evidence; nothing is sent until you approve.",
+};
+
+function statusLine(dispute: Dispute, dossier: Dossier): string {
+  if (dossier.status === "SUBMITTED") return dossier.note ?? "Submitted.";
+  if (dossier.status === "FAILED") return "PayPal did not accept this response. Draft again and retry.";
+  if (dossier.status === "APPROVED") {
+    return dispute.demo
+      ? "Approved. Demo dispute: sending records the submission, nothing goes to PayPal."
+      : "Approved. Send it to PayPal when ready.";
+  }
+  return dossier.strength === "WEAK"
+    ? "This response is weak. Consider accepting the claim instead."
+    : "Read it once more: this is what PayPal will see.";
+}
+
 function DisputeDetail({
   dispute,
-  approved,
-  onApprove,
+  live,
+  pending,
+  error,
+  onAction,
 }: {
   dispute: Dispute;
-  approved: boolean;
-  onApprove: () => void;
+  live: boolean;
+  pending: Action | null;
+  error: string | null;
+  onAction: (action: Action) => void;
 }) {
+  const busy = pending !== null;
   const dossier = dispute.dossier;
   const evidenceById = new Map(dispute.evidence.map((e) => [e.id, e]));
 
@@ -169,9 +239,7 @@ function DisputeDetail({
               </Badge>
             )}
           </div>
-          <p className="mt-1 text-sm text-ink-secondary">
-            Drafted by AI from the evidence above. Every paragraph cites its evidence; nothing is sent until you approve.
-          </p>
+          <p className="mt-1 text-sm text-ink-secondary">{DRAFTED_BY[dossier.draftedBy ?? "ai"]}</p>
 
           <div className="mt-4 space-y-4">
             {dossier.sections.map((section) => (
@@ -195,21 +263,60 @@ function DisputeDetail({
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-border pt-4">
-            <Button size="lg" onClick={onApprove} disabled={approved || dossier.status !== "DRAFT"}>
-              <ShieldCheck aria-hidden="true" />
-              {approved ? "Approved" : "Approve and send to PayPal"}
-            </Button>
+            {live && dossier.status === "DRAFT" ? (
+              <>
+                <Button size="lg" onClick={() => onAction("approve")} disabled={busy}>
+                  <ShieldCheck aria-hidden="true" />
+                  {pending === "approve" ? "Approving…" : "Approve"}
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => onAction("draft")} disabled={busy}>
+                  <FilePen aria-hidden="true" />
+                  {pending === "draft" ? "Drafting…" : "Draft again"}
+                </Button>
+              </>
+            ) : null}
+            {live && dossier.status === "APPROVED" ? (
+              <Button size="lg" onClick={() => onAction("submit")} disabled={busy}>
+                <Send aria-hidden="true" />
+                {pending === "submit" ? "Sending…" : "Send to PayPal"}
+              </Button>
+            ) : null}
+            {live && dossier.status === "FAILED" ? (
+              <Button size="lg" variant="outline" onClick={() => onAction("draft")} disabled={busy}>
+                <FilePen aria-hidden="true" />
+                {pending === "draft" ? "Drafting…" : "Draft again"}
+              </Button>
+            ) : null}
             <p className="text-sm text-ink-secondary" role="status">
-              {approved
-                ? "Approved. Sending to PayPal is connected once the disputes API is live."
-                : dossier.strength === "WEAK"
-                  ? "This response is weak. Consider accepting the claim instead."
-                  : "Read it once more: this is what PayPal will see."}
+              {statusLine(dispute, dossier)}
             </p>
           </div>
+          {dispute.demo && dossier.status === "DRAFT" ? (
+            <p className="mt-2 text-xs text-ink-muted">Demo dispute: submitting records it here, it is not sent to PayPal.</p>
+          ) : null}
+          {error ? (
+            <p className="mt-2 text-sm text-block" role="alert">
+              {error}
+            </p>
+          ) : null}
         </section>
       ) : (
-        <p className="text-sm text-ink-muted">GUARDRAIL is still collecting evidence for this dispute.</p>
+        <section className="flex flex-col items-start gap-3 rounded-lg border border-border bg-surface-raised p-card">
+          <p className="text-sm text-ink-secondary">
+            No response drafted yet. GUARDRAIL collects the evidence first, then drafts a response that cites it.
+          </p>
+          {live ? (
+            <Button size="lg" onClick={() => onAction("draft")} disabled={busy}>
+              <FilePen aria-hidden="true" />
+              {pending === "draft" ? "Drafting…" : "Draft response"}
+            </Button>
+          ) : null}
+          {error ? (
+            <p className="text-sm text-block" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </section>
       )}
     </div>
   );

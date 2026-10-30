@@ -25,7 +25,8 @@
     "spike": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/paypal-spike.ts",
     "webhook:register": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/register-webhook.ts",
     "invoices:seed": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/seed-invoices.ts",
-    "invoices:stage-scam": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/stage-scam-invoice.ts"
+    "invoices:stage-scam": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/stage-scam-invoice.ts",
+    "disputes:sync": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/disputes-sync.ts"
   },
   "devDependencies": {
     "@types/node": "^20",

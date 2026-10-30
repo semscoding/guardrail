@@ -10,7 +10,8 @@
     "./policies": "./src/policies/index.ts",
     "./audit": "./src/audit/index.ts",
     "./policy": "./src/policy/index.ts",
-    "./invoices": "./src/invoices/index.ts"
+    "./invoices": "./src/invoices/index.ts",
+    "./disputes": "./src/disputes/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
