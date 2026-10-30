@@ -6,7 +6,9 @@
   "type": "module",
   "exports": {
     "./catalog": "./src/catalog/index.ts",
-    "./payments": "./src/payments/index.ts"
+    "./payments": "./src/payments/index.ts",
+    "./policies": "./src/policies/index.ts",
+    "./audit": "./src/audit/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",

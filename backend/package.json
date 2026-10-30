@@ -8,11 +8,13 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "test": "tsx --test 'tests/**/*.test.ts'"
   },
   "dependencies": {
     "@guardrail/apis": "*",
     "@guardrail/database": "*",
-    "@guardrail/services": "*"
+    "@guardrail/services": "*",
+    "zod": "^4.6.7"
   }
 }

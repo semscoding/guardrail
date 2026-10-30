@@ -6,3 +6,4 @@ export * from "./purchasing";
 export * from "./invoices";
 export * from "./disputes";
 export * from "./audit";
+export * from "./logger";
