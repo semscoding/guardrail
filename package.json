@@ -16,7 +16,12 @@
     "lint": "eslint",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "contracts:check": "npm run contracts:check -w @guardrail/apis",
+    "test": "npm run test --workspaces --if-present",
     "check": "npm run typecheck && npm run lint && npm run contracts:check",
+    "db:migrate": "tsx --env-file-if-exists=frontend/.env.local database/src/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=frontend/.env.local database/src/seed.ts",
+    "db:reset": "tsx --env-file-if-exists=frontend/.env.local database/src/reset.ts",
+    "audit:verify": "tsx --env-file-if-exists=frontend/.env.local database/src/verify-audit.ts",
     "spike": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/paypal-spike.ts",
     "webhook:register": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/register-webhook.ts"
   },

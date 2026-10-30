@@ -2,7 +2,14 @@
 // so a reconnect or a later visit replays from seq 1 and then continues live.
 
 import { z } from "zod";
-import { Check, Decision, PaymentSummary, PurchaseProposal, RunStatus } from "../domain";
+import {
+  Check,
+  Decision,
+  PaymentSummary,
+  PurchaseProposal,
+  RunStatus,
+  UntrustedContent,
+} from "../domain";
 import { AppError } from "./api";
 
 const base = { runId: z.string(), seq: z.number().int().positive(), at: z.iso.datetime() };
@@ -14,6 +21,8 @@ export const RunEvent = z.discriminatedUnion("type", [
     /** Agent tool in use, if any: search_products, get_product, propose_purchase. */
     tool: z.string().nullable(),
     message: z.string(),
+    /** Raw external/shop text read during this step, with deterministic flags for instruction-like spans. */
+    untrustedContent: UntrustedContent.optional(),
   }),
   z.object({ ...base, type: z.literal("proposal"), proposal: PurchaseProposal }),
   /** One per rule, in order, so the checklist can animate rule by rule. */

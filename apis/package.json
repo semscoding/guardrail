@@ -13,7 +13,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
-    "contracts:check": "tsx scripts/check-contracts.ts"
+    "contracts:check": "tsx scripts/check-contracts.ts",
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "dependencies": {
     "zod": "^4.6.7"
