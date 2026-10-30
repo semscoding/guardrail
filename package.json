@@ -23,7 +23,9 @@
     "db:reset": "tsx --env-file-if-exists=frontend/.env.local database/src/reset.ts",
     "audit:verify": "tsx --env-file-if-exists=frontend/.env.local database/src/verify-audit.ts",
     "spike": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/paypal-spike.ts",
-    "webhook:register": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/register-webhook.ts"
+    "webhook:register": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/register-webhook.ts",
+    "invoices:seed": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/seed-invoices.ts",
+    "invoices:stage-scam": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/stage-scam-invoice.ts"
   },
   "devDependencies": {
     "@types/node": "^20",

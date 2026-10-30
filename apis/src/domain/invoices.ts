@@ -31,6 +31,18 @@ export const Finding = z.object({
 });
 export type Finding = z.infer<typeof Finding>;
 
+/**
+ * How the invoice was analysed. "offline" means no LLM key was configured: the verdict comes from the
+ * fixed rules only and the UI must say that no AI explanation exists. Rule output is never shown as AI.
+ */
+export const InvoiceAnalysis = z.object({
+  /** "failed": a key is configured but the LLM call failed; the verdict again uses the rules only. */
+  mode: z.enum(["anthropic", "offline", "failed"]),
+  /** The social-engineering tactic named by the LLM; null offline or when none was named. */
+  tactic: z.string().nullable(),
+});
+export type InvoiceAnalysis = z.infer<typeof InvoiceAnalysis>;
+
 export const InboundInvoice = z.object({
   id: z.string(),
   source: InvoiceSource,
@@ -42,5 +54,6 @@ export const InboundInvoice = z.object({
   verdict: Verdict,
   findings: z.array(Finding),
   payeeBlocked: z.boolean(),
+  analysis: InvoiceAnalysis,
 });
 export type InboundInvoice = z.infer<typeof InboundInvoice>;

@@ -243,6 +243,7 @@ export const mockInvoices: InboundInvoice[] = [
       },
     ],
     payeeBlocked: false,
+    analysis: { mode: "anthropic", tactic: "Refund scam: a fake renewal pushes you to call a phone number" },
   },
   {
     id: "inv_legit_1",
@@ -255,6 +256,7 @@ export const mockInvoices: InboundInvoice[] = [
     verdict: "SAFE",
     findings: [],
     payeeBlocked: false,
+    analysis: { mode: "anthropic", tactic: null },
   },
 ];
 

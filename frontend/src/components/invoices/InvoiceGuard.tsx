@@ -2,7 +2,8 @@
 
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { Ban, CircleCheck, FileSearch, ShieldAlert, TriangleAlert } from "lucide-react";
-import { formatMoney, type Finding, type InboundInvoice, type SignalKind, type Verdict } from "@guardrail/apis/domain";
+import { ENDPOINTS } from "@guardrail/apis/contracts";
+import { formatMoney, type Finding, type InboundInvoice, type InvoiceAnalysis, type SignalKind, type Verdict } from "@guardrail/apis/domain";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,13 +26,36 @@ const VERDICTS: Record<Verdict, { label: string; variant: "allow" | "approval" |
   SCAM: { label: "Scam", variant: "scam", icon: ShieldAlert, advice: "Don't pay and don't call any number in it. Block the payee." },
 };
 
+/** POST to our API and validate the reply with the contract schema. Returns data or a user-safe error message. */
+type Reply<T> = { ok: true; data: T } | { ok: false; error: string };
+
+async function post<T>(
+  path: string,
+  schema: { safeParse: (v: unknown) => { success: boolean; data?: unknown } },
+  body?: unknown,
+): Promise<Reply<T>> {
+  try {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: body === undefined ? undefined : { "content-type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const parsed = schema.safeParse(await res.json());
+    if (!parsed.success) return { ok: false, error: "The server sent an unexpected answer. Try again." };
+    const reply = parsed.data as { data: T } | { error: { message: string } };
+    return "data" in reply ? { ok: true, data: reply.data } : { ok: false, error: reply.error.message };
+  } catch {
+    return { ok: false, error: "Could not reach the server. Check your connection and try again." };
+  }
+}
+
 /** The invoice text with every finding marked in place, so the reason is visible where it is written. */
 function MarkedText({ text, findings }: { text: string; findings: Finding[] }) {
   const sorted = [...findings].sort((a, b) => a.span.start - b.span.start);
   const parts: ReactNode[] = [];
   let cursor = 0;
   sorted.forEach((f, i) => {
-    if (f.span.start < cursor) return; // overlapping spans: keep the first
+    if (f.span.start < cursor || f.span.end === f.span.start) return; // overlapping or not in the text: list only
     parts.push(text.slice(cursor, f.span.start));
     parts.push(
       <mark
@@ -49,23 +73,33 @@ function MarkedText({ text, findings }: { text: string; findings: Finding[] }) {
   return <p className="whitespace-pre-wrap font-mono text-sm leading-6 text-ink">{parts}</p>;
 }
 
-export function InvoiceGuard({ invoices }: { invoices: InboundInvoice[] }) {
-  const [selectedId, setSelectedId] = useState(invoices[0]?.id ?? null);
-  const [blocked, setBlocked] = useState<Record<string, boolean>>({});
+export function InvoiceGuard({ invoices: initial }: { invoices: InboundInvoice[] }) {
+  const [invoices, setInvoices] = useState(initial);
+  const [selectedId, setSelectedId] = useState(initial[0]?.id ?? null);
   const [draft, setDraft] = useState("");
+  const [checking, setChecking] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const textId = useId();
   const selected = invoices.find((i) => i.id === selectedId) ?? null;
 
-  function analyze(e: FormEvent) {
+  async function analyze(e: FormEvent) {
     e.preventDefault();
-    const match = invoices.find((i) => i.text.trim() === draft.trim());
-    if (match) {
-      setSelectedId(match.id);
-      setFormMessage(null);
-    } else {
-      setFormMessage("Analysing new text works once the Invoice Guard API is connected. Pick a received invoice below.");
+    if (checking) return;
+    setChecking(true);
+    setFormMessage(null);
+    const result = await post<InboundInvoice>(ENDPOINTS.analyzeInvoice.path, ENDPOINTS.analyzeInvoice.response, { text: draft });
+    setChecking(false);
+    if (!result.ok) {
+      setFormMessage(result.error);
+      return;
     }
+    setInvoices((list) => [result.data, ...list.filter((i) => i.id !== result.data.id)]);
+    setSelectedId(result.data.id);
+    setDraft("");
+  }
+
+  function markBlocked(payeeEmail: string) {
+    setInvoices((list) => list.map((i) => (i.payeeEmail?.toLowerCase() === payeeEmail.toLowerCase() ? { ...i, payeeBlocked: true } : i)));
   }
 
   return (
@@ -83,9 +117,9 @@ export function InvoiceGuard({ invoices }: { invoices: InboundInvoice[] }) {
             rows={4}
             className="mt-3 w-full rounded-md border border-border-strong bg-surface-raised p-3 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />
-          <Button type="submit" className="mt-3" disabled={!draft.trim()}>
+          <Button type="submit" className="mt-3" disabled={!draft.trim() || checking}>
             <FileSearch aria-hidden="true" />
-            Check invoice
+            {checking ? "Checking…" : "Check invoice"}
           </Button>
           {formMessage ? (
             <p role="alert" className="mt-3 text-sm text-block">
@@ -98,6 +132,7 @@ export function InvoiceGuard({ invoices }: { invoices: InboundInvoice[] }) {
           <h2 id="received-title" className="border-b border-border px-card py-3 text-base font-semibold text-ink">
             Checked invoices
           </h2>
+          {invoices.length ? null : <p className="px-card py-3 text-sm text-ink-secondary">No invoices checked yet.</p>}
           <ul>
             {invoices.map((inv) => {
               const v = VERDICTS[inv.verdict];
@@ -132,19 +167,46 @@ export function InvoiceGuard({ invoices }: { invoices: InboundInvoice[] }) {
       </div>
 
       {selected ? (
-        <InvoiceDetail
-          invoice={selected}
-          blocked={blocked[selected.id] ?? selected.payeeBlocked}
-          onBlock={() => setBlocked((b) => ({ ...b, [selected.id]: true }))}
-        />
+        <InvoiceDetail key={selected.id} invoice={selected} onBlocked={markBlocked} />
       ) : null}
     </div>
   );
 }
 
-function InvoiceDetail({ invoice, blocked, onBlock }: { invoice: InboundInvoice; blocked: boolean; onBlock: () => void }) {
+/** Says whether an AI looked at the invoice. Rule output is never presented as AI. */
+function AnalysisNote({ analysis }: { analysis: InvoiceAnalysis }) {
+  if (analysis.mode === "anthropic") {
+    return analysis.tactic ? (
+      <p className="mt-1 text-sm text-ink">
+        <span className="font-medium">Tactic, according to AI:</span> {analysis.tactic}
+      </p>
+    ) : null;
+  }
+  return (
+    <p className="mt-1 text-sm text-ink-secondary">
+      {analysis.mode === "offline"
+        ? "AI explanation unavailable: offline test mode. This verdict comes from fixed rules only."
+        : "AI explanation unavailable: the AI step failed. This verdict comes from fixed rules only."}
+    </p>
+  );
+}
+
+function InvoiceDetail({ invoice, onBlocked }: { invoice: InboundInvoice; onBlocked: (payeeEmail: string) => void }) {
+  const [blocking, setBlocking] = useState(false);
+  const [blockError, setBlockError] = useState<string | null>(null);
+  const blocked = invoice.payeeBlocked;
   const v = VERDICTS[invoice.verdict];
   const Icon = v.icon;
+  async function block() {
+    setBlocking(true);
+    setBlockError(null);
+    const path = ENDPOINTS.blockPayee.path.replace(":id", encodeURIComponent(invoice.id));
+    const result = await post<{ payeeEmail: string }>(path, ENDPOINTS.blockPayee.response);
+    setBlocking(false);
+    if (!result.ok) setBlockError(result.error);
+    else onBlocked(result.data.payeeEmail);
+  }
+
   const tone = { allow: "border-allow-border bg-allow-soft text-allow", approval: "border-approval-border bg-approval-soft text-approval", scam: "border-scam-border bg-scam-soft text-scam" }[v.variant];
 
   return (
@@ -154,6 +216,7 @@ function InvoiceDetail({ invoice, blocked, onBlock }: { invoice: InboundInvoice;
         <div>
           <p className="text-2xl font-semibold tracking-tight">{v.label}</p>
           <p className="mt-1 text-sm text-ink">{v.advice}</p>
+          <AnalysisNote analysis={invoice.analysis} />
         </div>
       </div>
 
@@ -194,7 +257,8 @@ function InvoiceDetail({ invoice, blocked, onBlock }: { invoice: InboundInvoice;
                       <span className="text-ink-secondary">{f.explanation} </span>
                     ) : null}
                     <span className="text-xs text-ink-muted">
-                      ({f.detectedBy === "rule" ? "found by a fixed rule" : "explained by AI"})
+                      ({f.detectedBy === "rule" ? "found by a fixed rule" : "found by AI"}
+                      {f.span.end === f.span.start ? ", from the invoice details, not in the text" : ""})
                     </span>
                   </span>
                 </li>
@@ -207,15 +271,20 @@ function InvoiceDetail({ invoice, blocked, onBlock }: { invoice: InboundInvoice;
 
       {invoice.verdict !== "SAFE" && invoice.payeeEmail ? (
         <div className="flex flex-wrap items-center gap-3">
-          <Button size="lg" variant={blocked ? "outline" : "default"} onClick={onBlock} disabled={blocked}>
+          <Button size="lg" variant={blocked ? "outline" : "default"} onClick={block} disabled={blocked || blocking}>
             <Ban aria-hidden="true" />
-            {blocked ? "Payee blocked" : "Block this payee"}
+            {blocked ? "Payee blocked" : blocking ? "Blocking…" : "Block this payee"}
           </Button>
           <p className="text-sm text-ink-secondary" role="status">
             {blocked
               ? "Rule R10 now refuses any payment to this payee, including by the agent."
               : "Blocking adds the payee to rule R10: GUARDRAIL will refuse any payment to them."}
           </p>
+          {blockError ? (
+            <p role="alert" className="w-full text-sm text-block">
+              {blockError}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>

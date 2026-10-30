@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
 import test from "node:test";
 import { mockPolicy } from "@guardrail/apis/mocks";
 import {
@@ -13,18 +14,20 @@ import {
   verifyAuditChain,
 } from "../src/index";
 
+const MIGRATION_COUNT = readdirSync(new URL("../migrations", import.meta.url)).filter((f) => f.endsWith(".sql")).length;
+
 test("resetDatabase runs twice cleanly, migrate + seed are idempotent, and Club Supplies policy is loaded", async () => {
   const client = await createDbClient({ pgliteDir: "memory://" });
   try {
     const first = await resetDatabase({ client });
-    assert.equal(first.migrations.applied.length, 5);
+    assert.equal(first.migrations.applied.length, MIGRATION_COUNT);
 
     const second = await resetDatabase({ client });
-    assert.equal(second.migrations.applied.length, 5);
+    assert.equal(second.migrations.applied.length, MIGRATION_COUNT);
 
     const noopMigrate = await migrate(client);
     assert.equal(noopMigrate.applied.length, 0);
-    assert.equal(noopMigrate.skipped.length, 5);
+    assert.equal(noopMigrate.skipped.length, MIGRATION_COUNT);
 
     const noopSeed = await seed(client);
     assert.equal(noopSeed.policyInserted, false);
@@ -115,7 +118,7 @@ test("resetDatabase in production requires the caller's own token, never the ser
     await assert.rejects(resetDatabase({ client, adminToken: "s3cret" }), /Refusing to reset/, "no server token configured");
     env.DEMO_ADMIN_TOKEN = "s3cret";
     const ok = await resetDatabase({ client, adminToken: "s3cret" });
-    assert.equal(ok.migrations.applied.length, 5);
+    assert.equal(ok.migrations.applied.length, MIGRATION_COUNT);
   } finally {
     env.NODE_ENV = saved.env;
     if (saved.token === undefined) delete env.DEMO_ADMIN_TOKEN;

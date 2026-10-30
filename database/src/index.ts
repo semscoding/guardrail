@@ -29,3 +29,10 @@ export {
   getPolicyVersion,
   insertPolicyVersionInTx,
 } from "./repositories/policies";
+export {
+  denylistPayeeInTx,
+  getInboundInvoice,
+  insertInboundInvoiceInTx,
+  listDeniedPayees,
+  listInboundInvoices,
+} from "./repositories/invoices";
