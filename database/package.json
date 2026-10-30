@@ -1,0 +1,21 @@
+{
+  "name": "@guardrail/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Postgres (Render) or embedded PGlite (local): client, migrations, seed and repositories.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.13",
+    "@guardrail/apis": "*",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1"
+  }
+}

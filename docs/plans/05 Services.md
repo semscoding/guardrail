@@ -82,19 +82,20 @@ Oordeel: regels en LLM samen → `SAFE | SUSPICIOUS | SCAM`. Een LLM alleen kan 
 `record(actor, action, entity, id, data)` binnen dezelfde transactie als de mutatie; berekent de hash; zie [[03 Database#Design|auditketen]].
 
 ## Structure
+Workspace `services/` (`@guardrail/services`), zie [[00 Overzicht#Repo-indeling (besluit 30-10-2026)|repo-indeling]].
 ```
-src/services/
-  agent/            run.ts  tools.ts  prompt.ts
-  policy/           evaluate.ts  rules/r01-limit.ts … r10-denylist.ts  types.ts
-  payments/         orchestrate.ts  approve.ts
-  catalog/          registry.ts  shops.ts  channel3Search.ts   (bestaande code)
-  disputes/         ingest.ts  collectEvidence.ts  requirements.ts  draftDossier.ts  submit.ts
-  invoices/         ingest.ts  rules.ts  classify.ts  verdict.ts  actions.ts
-  audit/            record.ts  verify.ts
-tests/unit/policy/  één testbestand per regel
-tests/scenarios/    scene1.test.ts  scene2.test.ts  dispute-inr.test.ts  scam-invoice.test.ts
+services/
+  src/agent/            run.ts  tools.ts  prompt.ts
+  src/policy/           evaluate.ts  rules/r01-limit.ts … r10-denylist.ts  types.ts
+  src/payments/         payments.ts (bestaande code)  orchestrate.ts  approve.ts
+  src/catalog/          registry.ts  shops.ts  channel3Search.ts   (bestaande code)
+  src/disputes/         ingest.ts  collectEvidence.ts  requirements.ts  draftDossier.ts  submit.ts
+  src/invoices/         ingest.ts  rules.ts  classify.ts  verdict.ts  actions.ts
+  src/audit/            record.ts  verify.ts
+  tests/unit/policy/    één testbestand per regel
+  tests/scenarios/      scene1.test.ts  scene2.test.ts  dispute-inr.test.ts  scam-invoice.test.ts
 ```
-**Conventies:** één regel = één bestand met `id`, `description`, `evaluate()`; services exporteren één hoofdfunctie per use case; alle LLM-prompts in eigen `prompt.ts`-bestanden, met versienummer dat in `run_events` wordt gelogd.
+**Conventies:** services importeren alleen `@guardrail/database` en `@guardrail/apis` (adapters, domeintypes), nooit `frontend` of `backend`; één regel = één bestand met `id`, `description`, `evaluate()`; services exporteren één hoofdfunctie per use case; alle LLM-prompts in eigen `prompt.ts`-bestanden, met versienummer dat in `run_events` wordt gelogd.
 
 ## Scale
 **Voor de demo**

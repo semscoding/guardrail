@@ -53,21 +53,23 @@ Terug naar [[00 Overzicht]] · Gebruikt door: [[02 Backend]], [[05 Services]]
 **Indexen:** `runs(policy_id, started_at)`, `payments(status, created_at)` voor R2-maandsom, `disputes(seller_response_due)`, `audit_events(entity, entity_id)`.
 
 ## Structure
+Workspace `database/` (`@guardrail/database`), zie [[00 Overzicht#Repo-indeling (besluit 30-10-2026)|repo-indeling]].
 ```
-src/db/
-  client.ts                bestaande db() (PGlite/Postgres)
-  migrate.ts               leest migrations/*.sql op volgorde, houdt schema_migrations bij
+database/
+  src/client.ts            bestaande db() (PGlite/Postgres), was src/lib/db.ts
+  src/migrate.ts           leest migrations/*.sql op volgorde, houdt schema_migrations bij
   migrations/
     0001_init.sql          huidige payments + webhook_events
     0002_policies_runs.sql
     0003_audit.sql         + trigger
     0004_invoices.sql
     0005_disputes.sql
-  seed.ts                  policy "Club Supplies", demowinkels, één sandbox-dispute-placeholder
-  repositories/
+  src/seed.ts              policy "Club Supplies", demowinkels, één sandbox-dispute-placeholder
+  src/repositories/
     policies.ts runs.ts decisions.ts payments.ts audit.ts invoices.ts disputes.ts
+  tests/
 ```
-**Conventies:** tabellen meervoud snake_case; elke migratie alleen vooruit (geen down); repositories geven domeintypes terug, nooit ruwe rijen; alle schrijfacties die een auditregel geven gebeuren in één transactie via `withTx(fn)`.
+**Conventies:** `database/` importeert alleen `@guardrail/apis` (domeintypes); frontend-code gebruikt de database nooit direct, alleen via `@guardrail/services`; tabellen meervoud snake_case; elke migratie alleen vooruit (geen down); repositories geven domeintypes terug, nooit ruwe rijen; alle schrijfacties die een auditregel geven gebeuren in één transactie via `withTx(fn)`.
 
 **Scripts:** `db:migrate`, `db:seed`, `db:reset` (drop + migrate + seed, alleen lokaal of met `DEMO_ADMIN_TOKEN`), `audit:verify`.
 

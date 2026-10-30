@@ -1,0 +1,21 @@
+{
+  "name": "@guardrail/apis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contracts and integrations: domain types, our HTTP/SSE contract, UI mocks, and adapters for PayPal, Channel3 and Claude.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./domain": "./src/domain/index.ts",
+    "./contracts": "./src/contracts/index.ts",
+    "./mocks": "./src/mocks/index.ts",
+    "./paypal": "./src/paypal/client.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "contracts:check": "tsx scripts/check-contracts.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

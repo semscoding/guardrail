@@ -1,0 +1,18 @@
+{
+  "name": "@guardrail/backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server runtime: env, logging, errors, route wrapper, health, monitoring, jobs and operational scripts.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@guardrail/apis": "*",
+    "@guardrail/database": "*",
+    "@guardrail/services": "*"
+  }
+}

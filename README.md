@@ -8,11 +8,25 @@ An AI agent that can buy on your behalf, inside a spending policy it cannot bypa
 - Day 1–2: PayPal sandbox client and spike. Result: **plan A**. After one approval the buyer's wallet is vaulted and the server can authorize later orders without a buyer click.
 - Day 3: verified PayPal webhooks (`/api/paypal/webhook`), payment store, demo shops.
 
+## Repo layout
+npm workspaces, one Next.js app, one deploy. Dependencies point one way: frontend → backend → services → database → apis.
+
+| Folder | What lives there |
+|---|---|
+| [`frontend/`](frontend) | Next.js app: pages, components, thin API route handlers |
+| [`backend/`](backend) | server runtime: env, logging, errors, health, monitoring, jobs, scripts |
+| [`database/`](database) | Postgres/PGlite client, migrations, seed, repositories |
+| [`apis/`](apis) | domain types, our HTTP/SSE contracts, UI mocks, PayPal/Channel3/Claude adapters |
+| [`services/`](services) | business logic: catalog, payments, policy engine, agent, invoices, disputes, audit |
+
+Plans per layer: [`docs/plans/`](docs/plans). Rules for contributors and agents: [`AGENTS.md`](AGENTS.md).
+
 ## Setup
 ```bash
 npm install
-cp .env.example .env.local   # fill in your PayPal sandbox credentials
+cp frontend/.env.example frontend/.env.local   # fill in your PayPal sandbox credentials
 npm run dev
+npm run check                                  # typecheck + lint + contract check
 ```
 
 ## PayPal sandbox spike
@@ -23,14 +37,14 @@ npm run spike
 ```
 
 Needs, in the [PayPal developer dashboard](https://developer.paypal.com/dashboard/) (Sandbox):
-1. An app under *Apps & Credentials* → client id + secret into `.env.local`.
+1. An app under *Apps & Credentials* → client id + secret into `frontend/.env.local`.
 2. A sandbox **personal** account (the buyer) to approve the first order.
 3. Optional: a sandbox **business** account with country NL as payee (`PAYEE_EMAIL_NORDIC_GEAR`).
 
 Results are written to `spike-results.json` (git-ignored).
 
 ## Webhooks locally
-PayPal needs a public URL. Run the app, open a quick tunnel and register it (stores `PAYPAL_WEBHOOK_ID` in `.env.local`):
+PayPal needs a public URL. Run the app, open a quick tunnel and register it (stores `PAYPAL_WEBHOOK_ID` in `frontend/.env.local`):
 
 ```bash
 npm run dev
@@ -43,7 +57,7 @@ Every event is stored in `webhook_events`; only events whose signature PayPal co
 ## Demo shops
 `/shops`: three staged shops. **Nordic Gear** (NL) and **EU SportDirect** (DE) are in GUARDRAIL's seller registry. **DealZone X** is not: its product page hides a prompt injection, and its checkout (`/api/shops/dealzone-x/quote?product=match-balls-20`) adds €49 that the page never showed (€340 → €389).
 
-Each shop is paid through its own sandbox business account (`PAYEE_EMAIL_*` in `.env.local`), so the policy engine can identify the seller from the PayPal order itself.
+Each shop is paid through its own sandbox business account (`PAYEE_EMAIL_*` in `frontend/.env.local`), so the policy engine can identify the seller from the PayPal order itself.
 
 ## Storage
 Postgres when `DATABASE_URL` is set, otherwise embedded PGlite in `.data/` (nothing to install).

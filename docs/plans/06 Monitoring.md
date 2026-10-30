@@ -1,6 +1,6 @@
-# 06 Monitoring
+# 06 Monitoring (onderdeel van backend/)
 
-Terug naar [[00 Overzicht]] · Raakt: alle lagen
+Terug naar [[00 Overzicht]] · Onderdeel van [[02 Backend|backend]] (workspace `backend/`, geen eigen map) · Raakt: alle lagen
 
 Twee soorten monitoring: **operationeel** (draait het, gaat er iets mis?) en **gedrag** (doet de agent wat hij moet doen, en houdt de guardrail stand?). Het auditlog is géén monitoring maar productfunctionaliteit; het staat in [[03 Database]] en [[05 Services]].
 
@@ -22,7 +22,7 @@ Twee soorten monitoring: **operationeel** (draait het, gaat er iets mis?) en **g
 **Buiten scope:** Datadog/Grafana, tracing-backend, uptime-SaaS.
 
 ## Design
-**Logger** (`lib/logger.ts`, geen dependency): `log.info(event, fields)` → één JSON-regel naar stdout (Render toont en bewaart die). Velden altijd: `ts`, `level`, `event`, `requestId`, `runId?`, `service?`, `durationMs?`. Redactie-lijst: `authorization`, `client_secret`, `access_token`, `email` (gemaskeerd), `raw_text`.
+**Logger** (`backend/src/logger.ts`, geen dependency): `log.info(event, fields)` → één JSON-regel naar stdout (Render toont en bewaart die). Velden altijd: `ts`, `level`, `event`, `requestId`, `runId?`, `service?`, `durationMs?`. Redactie-lijst: `authorization`, `client_secret`, `access_token`, `email` (gemaskeerd), `raw_text`.
 
 **Wat loggen**
 | Event | Velden |
@@ -36,9 +36,9 @@ Twee soorten monitoring: **operationeel** (draait het, gaat er iets mis?) en **g
 | `invoice.verdict` | invoiceId, verdict, signals[] |
 | `dispute.submitted` | disputeId, evidenceCount |
 
-**Health** (`/api/health`): `{ db: ok|fail, paypal: ok|fail (token ophalen), anthropic: ok|skip, channel3: ok|fail, version: <git sha> }`. Render gebruikt dit als health check; de UI toont een klein statuspuntje in de header (handig tijdens opnames).
+**Health** (`/api/health`, logica in `backend/src/health.ts`): `{ db: ok|fail, paypal: ok|fail (token ophalen), anthropic: ok|skip, channel3: ok|fail, version: <git sha> }`. Render gebruikt dit als health check; de UI toont een klein statuspuntje in de header (handig tijdens opnames).
 
-**Invarianten (guardrail-bewaking)** — controleert `scripts/jobs/invariants.ts` na elke run en elk uur:
+**Invarianten (guardrail-bewaking)** — controleert `backend/src/monitoring/invariants.ts` (cron: `backend/scripts/jobs/invariants.ts`) na elke run en elk uur:
 - Elke `CAPTURED` payment heeft een `ALLOW`-beslissing of een goedkeuring in het auditlog.
 - Geen open authorisatie ouder dan de policy-termijn.
 - Hashketen klopt (`audit:verify`).
@@ -53,14 +53,17 @@ Schending → ntfy-alert met hoge prioriteit + log `invariant.violated`.
 - Output: tabel in de terminal + JSON in `eval-results/` (gitignored).
 
 ## Structure
+Valt onder workspace `backend/` (`@guardrail/backend`), zie [[02 Backend#Monitoring valt onder backend/|backend]].
 ```
-src/lib/logger.ts
-src/app/api/health/route.ts
-scripts/jobs/invariants.ts
-scripts/eval/run.ts  scenarios.ts
-src/services/alerts/ntfy.ts
+backend/src/logger.ts
+backend/src/health.ts                       health-checks
+backend/src/monitoring/alerts/ntfy.ts
+backend/src/monitoring/invariants.ts
+backend/scripts/jobs/invariants.ts          cron: draait de invarianten
+backend/scripts/eval/run.ts  scenarios.ts   npm run eval (vanuit de repo-root)
+frontend/src/app/api/health/route.ts        dunne route handler
 ```
-**Conventies:** event-namen `domein.actie` in kleine letters; nooit `console.log` direct (lint-regel `no-console` behalve in `logger.ts` en scripts); elke catch logt met `error.code` en `upstream.debugId` als die er is.
+**Conventies:** event-namen `domein.actie` in kleine letters; nooit `console.log` direct (lint-regel `no-console` behalve in `backend/src/logger.ts` en `backend/scripts/`); elke catch logt met `error.code` en `upstream.debugId` als die er is.
 
 ## Scale
 **Voor de demo**

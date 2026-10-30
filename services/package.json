@@ -1,0 +1,18 @@
+{
+  "name": "@guardrail/services",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Business logic per pillar: catalog, payments, policy engine, agent, invoices, disputes, audit.",
+  "type": "module",
+  "exports": {
+    "./catalog": "./src/catalog/index.ts",
+    "./payments": "./src/payments/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@guardrail/apis": "*",
+    "@guardrail/database": "*"
+  }
+}

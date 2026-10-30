@@ -40,29 +40,35 @@ Terug naar [[00 Overzicht]] · Hangt af van: [[04 API's]] (eigen HTTP-contract)
 **AG Grid-keuze:** Community-editie (gratis, geen watermerk). Master-detail en row grouping zijn Enterprise; daarom: klik op rij → zijpaneel met de volledige `checks[]`. Vraag de sponsor om een hackathon-sleutel; komt die er, dan master-detail als upgrade.
 
 **Data ophalen**
-- Server Components lezen direct via de services (geen eigen fetch naar de eigen API).
+- Server Components lezen direct via de services (`@guardrail/services`; geen eigen fetch naar de eigen API).
 - Mutaties via Server Actions of `POST /api/...` (zie [[04 API's]]).
 - Agent-run: `EventSource` op `/api/runs/:id/stream`. Events: `step`, `proposal`, `check`, `decision`, `payment`, `error`.
 - Geen client-state-library; `useState` + server-revalidatie is genoeg.
 
 ## Structure
+Workspace `frontend/` (`@guardrail/frontend`), zie [[00 Overzicht#Repo-indeling (besluit 30-10-2026)|repo-indeling]].
 ```
-src/app/
-  layout.tsx                 shell, navigatie
-  page.tsx                   overzicht
-  purchasing/page.tsx        pijler 1
-  purchasing/[runId]/page.tsx  één run teruglezen (ook voor de video)
-  disputes/page.tsx          pijler 3, queue
-  disputes/[id]/page.tsx     dossier
-  invoices/page.tsx          pijler 2
-  audit/page.tsx             AG Grid
-  shops/...                  bestaande demowinkels (ongewijzigd)
-src/components/
-  ui/                        shadcn-componenten (gegenereerd, niet handmatig aanpassen)
-  purchasing/  disputes/  invoices/  audit/   feature-componenten
-src/hooks/useRunStream.ts    SSE-client met reconnect
+frontend/
+  src/app/
+    layout.tsx                 shell, navigatie
+    page.tsx                   overzicht
+    purchasing/page.tsx        pijler 1
+    purchasing/[runId]/page.tsx  één run teruglezen (ook voor de video)
+    disputes/page.tsx          pijler 3, queue
+    disputes/[id]/page.tsx     dossier
+    invoices/page.tsx          pijler 2
+    audit/page.tsx             AG Grid
+    shops/...                  bestaande demowinkels (ongewijzigd)
+    api/                       route handlers: Track A, zie [[04 API's]]
+  src/components/
+    ui/                        shadcn-componenten (gegenereerd, niet handmatig aanpassen)
+    purchasing/  disputes/  invoices/  audit/   feature-componenten
+  src/hooks/useRunStream.ts    SSE-client met reconnect
+  public/  next.config.ts
+  tests/
+apis/src/mocks/                mock-data volgens de contracten (Track B)
 ```
-**Conventies:** componenten in PascalCase, één component per bestand; `"use client"` alleen waar nodig (stream, grid, formulieren); geen data-logica in componenten, alleen weergave.
+**Conventies:** componenten in PascalCase, één component per bestand; `"use client"` alleen waar nodig (stream, grid, formulieren); geen data-logica in componenten, alleen weergave. Client-componenten importeren alleen `@guardrail/apis` (domain, contracts, mocks); server components mogen `@guardrail/backend` en `@guardrail/services` gebruiken, nooit `@guardrail/database` direct.
 
 **Bouwvolgorde:** shell + tokens → Purchasing (2-11) → Audit grid → Disputes (4-11) → Invoices (6-11) → polish (7-11).
 

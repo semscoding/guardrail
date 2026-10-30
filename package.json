@@ -2,33 +2,28 @@
   "name": "guardrail",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apis",
+    "database",
+    "services",
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "npm run dev -w @guardrail/frontend",
+    "build": "npm run build -w @guardrail/frontend",
+    "start": "npm run start -w @guardrail/frontend",
     "lint": "eslint",
-    "spike": "tsx --env-file-if-exists=.env.local scripts/paypal-spike.ts",
-    "typecheck": "next typegen && tsc --noEmit",
-    "webhook:register": "tsx --env-file-if-exists=.env.local scripts/register-webhook.ts",
-    "contracts:check": "tsx --tsconfig tsconfig.json scripts/check-contracts.ts"
-  },
-  "dependencies": {
-    "@electric-sql/pglite": "^0.5.13",
-    "next": "16.4.3",
-    "pg": "^8.23.1",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "zod": "^4.6.7"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "contracts:check": "npm run contracts:check -w @guardrail/apis",
+    "check": "npm run typecheck && npm run lint && npm run contracts:check",
+    "spike": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/paypal-spike.ts",
+    "webhook:register": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/register-webhook.ts"
   },
   "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
-    "@types/pg": "^8.23.1",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
-    "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
   }

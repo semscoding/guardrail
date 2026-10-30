@@ -17,7 +17,35 @@ Elke laag heeft een eigen plan met vier vaste fasen. Zo bouwen we als full-stack
 3. [[03 Database]]: schema, migraties, geld, idempotentie, auditketen
 4. [[04 API's]]: eigen HTTP-contract + adapters voor PayPal, Channel3 en Claude
 5. [[05 Services]]: Agent, Policy-engine, Payment-orchestrator, Invoice Shield, Dispute Defender
-6. [[06 Monitoring]]: logs, auditspoor, health, alerts, agent-evaluatie
+6. [[06 Monitoring]]: logs, auditspoor, health, alerts, agent-evaluatie (onderdeel van `backend/`)
+
+## Repo-indeling (besluit 30-10-2026)
+De code-repo `/Users/sem/Developer/guardrail` is opgezet als **npm-workspaces** met vijf top-level mappen, gelijk aan de lagen. Het blijft één Next.js-app en één deploy op Render. Monitoring is geen eigen map maar valt onder `backend/` (zie [[06 Monitoring|monitoring in de backend]]).
+
+```
+guardrail/
+  package.json (workspaces)  package-lock.json  tsconfig.base.json  eslint.config.mjs
+  frontend/.env.example + .env.local (Next.js leest env alleen uit frontend/)  AGENTS.md  docs/plans/
+  frontend/   @guardrail/frontend   Next.js-app: src/app/ (pagina's + src/app/api/ dunne route handlers),
+                                    src/components/, src/hooks/, public/, next.config.ts
+  backend/    @guardrail/backend    server-runtime: src/env.ts, src/logger.ts, src/errors.ts,
+                                    src/http.ts (route()-wrapper), src/health.ts,
+                                    src/monitoring/ (alerts/ntfy, invarianten),
+                                    scripts/ (paypal-spike, register-webhook, jobs/, eval/)
+  database/   @guardrail/database   src/client.ts (db()), migrations/*.sql, src/migrate.ts,
+                                    src/seed.ts, src/repositories/
+  apis/       @guardrail/apis       src/domain/ (zod-types), src/contracts/ (eigen HTTP-contract + SSE-events),
+                                    src/mocks/, src/paypal/, src/channel3/, src/llm/, scripts/check-contracts.ts
+  services/   @guardrail/services   src/catalog/ (shops, registry), src/payments/, src/policy/ (rules/r01…r10),
+                                    src/agent/, src/invoices/, src/disputes/, src/audit/
+```
+
+**Afhankelijkheden alleen in deze richting:** `frontend → backend → services → database → apis`.
+- Client-componenten in `frontend/` importeren alleen `@guardrail/apis` (domain, contracts, mocks).
+- Server-code in `frontend/` (route handlers, server components) mag `@guardrail/backend` en `@guardrail/services` gebruiken, nooit `@guardrail/database` direct.
+- Tests staan per workspace in `<map>/tests/`.
+
+Per laag staat de detailindeling in de sectie *Structure* van het plan: [[01 Frontend#Structure|frontend]], [[02 Backend#Structure|backend]], [[03 Database#Structure|database]], [[04 API's#Structure|apis]], [[05 Services#Structure|services]] en [[06 Monitoring#Structure|monitoring]].
 
 ## Scope: drie pijlers (besluit 30-10-2026)
 | Pijler | Wat | Status | Minimale demo-slice |
@@ -65,20 +93,22 @@ Dag 1 t/m 3 van het oude bouwplan zijn klaar (PayPal-spike, vaulting plan A, web
 ## Parallel werken: Claude + Antigravity
 Twee agents tegelijk levert alleen tijd op als ze **nooit dezelfde bestanden aanraken** en tegen **vaste contracten** bouwen.
 
-**Stap 0 (eerst, samen, ~2 uur):** `src/domain/*` (types) en `src/contracts/*` (zod-schema's van alle endpoints en SSE-events) vastleggen en committen op `main`. Daarna verandert een contract alleen in overleg; de andere track krijgt dan een korte melding.
+**Stap 0 (eerst, samen, ~2 uur):** `apis/src/domain/*` (types) en `apis/src/contracts/*` (zod-schema's van alle endpoints en SSE-events) vastleggen en committen op `main`. Daarna verandert een contract alleen in overleg; de andere track krijgt dan een korte melding.
 
 | | **Track A: Claude** (logica, geld, veiligheid) | **Track B: Antigravity** (UI, integraties) |
 |---|---|---|
-| Eigenaar van | `src/services/`, `src/adapters/paypal/`, `src/adapters/llm/`, `src/db/` (incl. **alle migraties**), `tests/` | `src/app/` (pagina's), `src/components/`, `src/hooks/`, `src/adapters/channel3/`, styling/tokens |
+| Eigenaar van | `backend/`, `database/` (incl. **alle migraties**), `services/`, `apis/` (behalve `apis/src/channel3/` en `apis/src/mocks/`), `frontend/src/app/api/`; tests in die workspaces | `frontend/` (behalve `frontend/src/app/api/`): pagina's, `src/components/`, `src/hooks/`, styling/tokens; plus `apis/src/channel3/` en `apis/src/mocks/` |
 | Pijler 1 | agent, policy-engine R1–R10, payment-orchestrator, auditketen | Purchasing-scherm, checklist-animatie, bon, AuditGrid |
 | Pijler 3 | dispute-ingest, bewijs, gap-analyse, dossier, indienen | Disputes-queue en dossierscherm |
 | Pijler 2 | Shield-regels, Claude-classificatie, denylist (R10) | Invoices-scherm met gemarkeerde signalen |
 | Monitoring | logger, health, invarianten, `npm run eval` | statuspunt in de header, reset-knop |
-| Werkt tegen | echte sandbox + unittests | **mock-data die aan de contracten voldoet** (`src/mocks/`), tot track A de endpoint levert |
+| Werkt tegen | echte sandbox + unittests | **mock-data die aan de contracten voldoet** (`apis/src/mocks/`), tot track A de endpoint levert |
 
 **Spelregels**
 - Elke track een eigen branch/worktree (`feat/core` en `feat/ui`); **dagelijks mergen naar `main`** en de ander rebaset.
-- Gedeelde bestanden (`package.json`, `src/contracts/`, `.env.example`) wijzigt alleen track A; track B vraagt het aan.
+- Gedeelde bestanden (`apis/src/domain/`, `apis/src/contracts/`, alle `package.json`-bestanden, `frontend/.env.example`, `AGENTS.md`) wijzigt alleen track A; track B vraagt het aan.
+- Afhankelijkheden alleen in de richting `frontend → backend → services → database → apis` (zie [[#Repo-indeling (besluit 30-10-2026)|repo-indeling]]); `npm run contracts:check` blijft de check dat mocks en endpoints aan de contracten voldoen.
+- Alle checks (`typecheck`, `lint`, `test`, `contracts:check`) draaien vanuit de repo-root.
 - Elke agent leest bij de start deze plannen en de repo-`AGENTS.md` met de eigendomsregels hierboven.
 - Jij bent de integrator: na elke merge `npm run typecheck && npm test` en scène 1 in de browser.
 

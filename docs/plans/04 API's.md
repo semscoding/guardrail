@@ -58,7 +58,7 @@ Responses: `{ data }` bij succes, `{ error: AppError }` bij een fout (zie [[02 B
 - Sandbox en live alleen via `PAYPAL_BASE_URL`; geen if-sandbox-logica in de code.
 
 ### Channel3-adapter
-- `searchProducts(query, filters) → Product[]` en `getProduct(id) → Product`, gemapt naar het bestaande `Product`-type uit `shops.ts`, met `source: "channel3" | "demo"`.
+- `searchProducts(query, filters) → Product[]` en `getProduct(id) → Product`, gemapt naar een nieuw `CatalogProduct`-type in `apis/src/domain/` (Track A voegt het toe vóór de Channel3-taak; `services/src/catalog/shops.ts` gaat het dan ook gebruiken), met `source: "channel3" | "demo"`.
 - Ontbrekende velden worden `undefined` (niet verzonnen); de policy-engine faalt een regel als het bewijs ontbreekt ("unknown = fail").
 - Response-cache 10 min in-memory (demo stabiel, rate limit sparen).
 
@@ -70,14 +70,19 @@ Responses: `{ data }` bij succes, `{ error: AppError }` bij een fout (zie [[02 B
 - Prompt caching op de systeemprompt + tooldefinities.
 
 ## Structure
+Workspace `apis/` (`@guardrail/apis`) plus de route handlers in `frontend/`; zie [[00 Overzicht#Repo-indeling (besluit 30-10-2026)|repo-indeling]].
 ```
-src/app/api/<resource>/route.ts      dunne handlers via route()-wrapper
-src/contracts/                        zod-schema's per endpoint (gedeeld met frontend)
-  runs.ts  policies.ts  invoices.ts  disputes.ts  audit.ts  events.ts
-src/adapters/paypal/  channel3/  llm/
-tests/contract/                       schema-tests + opgenomen voorbeeldresponses (fixtures)
+frontend/src/app/api/<resource>/route.ts   dunne handlers via route()-wrapper (@guardrail/backend)
+apis/
+  src/contracts/                  zod-schema's per endpoint + SSE-events (gedeeld met frontend)
+    runs.ts  policies.ts  invoices.ts  disputes.ts  audit.ts  events.ts
+  src/domain/                     zod-types
+  src/mocks/                      mock-data volgens de contracten (Track B)
+  src/paypal/  src/channel3/  src/llm/   adapters (channel3 is Track B)
+  scripts/check-contracts.ts      npm run contracts:check
+  tests/contract/                 schema-tests + opgenomen voorbeeldresponses (fixtures)
 ```
-**Conventies:** padnamen meervoud; acties als sub-resource (`/submit`, `/approve`); adapters exporteren functies, geen klassen; fixtures van echte sandbox-responses opslaan in `tests/fixtures/` (zonder secrets) zodat tests offline draaien.
+**Conventies:** padnamen meervoud; acties als sub-resource (`/submit`, `/approve`); adapters exporteren functies, geen klassen; `apis/` is de onderste laag en importeert geen andere workspace; fixtures van echte sandbox-responses opslaan in `apis/tests/fixtures/` (zonder secrets) zodat tests offline draaien.
 
 ## Scale
 **Voor de demo**
