@@ -55,3 +55,18 @@ test("admin route: no or wrong token → 401, right token → 200", async () => 
   delete process.env.DEMO_ADMIN_TOKEN;
   resetEnvCache();
 });
+
+test("admin route: open locally without a configured token, closed in production", async () => {
+  const env = process.env as Record<string, string | undefined>;
+  const saved = env.NODE_ENV;
+  delete env.DEMO_ADMIN_TOKEN;
+  const handler = route({ auth: "admin" }, () => ({ ok: true }));
+  env.NODE_ENV = "development";
+  resetEnvCache();
+  assert.equal((await handler(new Request("http://localhost/api/x"))).status, 200);
+  env.NODE_ENV = "production";
+  resetEnvCache();
+  assert.equal((await handler(new Request("http://localhost/api/x"))).status, 401);
+  env.NODE_ENV = saved;
+  resetEnvCache();
+});

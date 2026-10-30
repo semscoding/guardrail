@@ -23,8 +23,11 @@ export function route<B = undefined, Q = undefined, P = Record<string, string>>(
     const started = Date.now();
     try {
       if (options.auth === "admin") {
-        const expected = env().DEMO_ADMIN_TOKEN;
-        if (!expected || request.headers.get("x-admin-token") !== expected) {
+        const { DEMO_ADMIN_TOKEN: expected, NODE_ENV } = env();
+        // Production always needs the token. Locally, without a token configured, admin actions are open
+        // so the demo can be reset while recording.
+        const open = !expected && NODE_ENV !== "production";
+        if (!open && (!expected || request.headers.get("x-admin-token") !== expected)) {
           throw appError("UNAUTHORIZED", "This action needs the admin token.");
         }
       }

@@ -5,6 +5,7 @@ import { FlaskConical, ShieldCheck, TriangleAlert } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { Badge } from "@/components/ui/badge";
 import { NAV_ITEMS } from "@/lib/navigation";
+import { ResetDemoButton } from "@/components/ResetDemoButton";
 
 function AppNavSkeleton() {
   return (
@@ -66,9 +67,9 @@ export function AppHeader() {
           </Link>
           <span
             aria-hidden="true"
-            className="hidden h-4 w-px bg-border lg:inline-block"
+            className="hidden h-4 w-px bg-border xl:inline-block"
           />
-          <span className="hidden text-xs text-ink-muted lg:inline">
+          <span className="hidden text-xs text-ink-muted xl:inline">
             AI proposes, code decides
           </span>
         </div>
@@ -80,6 +81,7 @@ export function AppHeader() {
         </div>
 
         <div className="order-2 flex h-13 items-center gap-2 md:order-3 md:h-auto">
+          <ResetDemoButton />
           <PayPalEnvironmentBadge />
         </div>
       </div>

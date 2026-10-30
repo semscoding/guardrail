@@ -12,7 +12,8 @@
     "./policy": "./src/policy/index.ts",
     "./invoices": "./src/invoices/index.ts",
     "./disputes": "./src/disputes/index.ts",
-    "./agent": "./src/agent/index.ts"
+    "./agent": "./src/agent/index.ts",
+    "./demo": "./src/demo/reset.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",

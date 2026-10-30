@@ -141,3 +141,4 @@ export async function blockPayee(invoiceId: string, deps: { client?: DbClient; l
     return { ok: true, payeeEmail, blocked: true } as const;
   }, deps.client);
 }
+export { seedDemoInvoices, type SeededInvoice } from "./seed";
