@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Scale } from "lucide-react";
 
 import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
@@ -10,11 +11,7 @@ export const metadata: Metadata = {
 
 export default function DisputesPage() {
   return (
-    <main
-      id="main-content"
-      tabIndex={-1}
-      className="mx-auto flex w-full max-w-[var(--container-shell)] flex-1 flex-col gap-section px-4 py-page-y focus:outline-none md:px-page-x"
-    >
+    <PageShell>
       <PageHeader
         title="Dispute Defender"
         description="Review incoming PayPal disputes, verify Seller Protection evidence, and approve dossiers before submission."
@@ -36,6 +33,6 @@ export default function DisputesPage() {
           </div>
         </CardHeader>
       </Card>
-    </main>
+    </PageShell>
   );
 }

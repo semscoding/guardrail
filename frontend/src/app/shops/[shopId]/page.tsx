@@ -9,12 +9,12 @@ export default async function ShopPage({ params }: PageProps<"/shops/[shopId]">)
   if (!shop) notFound();
 
   return (
-    <main className="w-full">
+    <main id="main-content" tabIndex={-1} className="w-full">
       <header className="px-4 py-8 text-white" style={{ background: shop.accent }}>
         <div className="mx-auto max-w-4xl">
           <h1 className="text-3xl font-bold">{shop.name}</h1>
           <p className="mt-1 opacity-90">{shop.tagline}</p>
-          <p className="mt-2 text-sm opacity-80">
+          <p className="mt-2 text-sm">
             Based in {shop.claimedCountry} · Seller rating {shop.claimedRating}/5
           </p>
         </div>

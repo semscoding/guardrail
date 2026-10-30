@@ -12,7 +12,7 @@ export default async function ProductPage({ params }: PageProps<"/shops/[shopId]
   if (!shop || !product) notFound();
 
   return (
-    <main className="w-full">
+    <main id="main-content" tabIndex={-1} className="w-full">
       <header className="px-4 py-4 text-white" style={{ background: shop.accent }}>
         <Link href={`/shops/${shop.id}`} className="mx-auto block max-w-4xl font-bold">
           {shop.name}

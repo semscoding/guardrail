@@ -196,3 +196,25 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* GUARDRAIL motion: one orchestrated moment. Ledger rows enter as their check arrives,
+   the result icon settles, and the verdict lands once. Nothing else moves on its own. */
+@keyframes gr-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes gr-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes gr-stamp {
+  from { transform: scale(0.98); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.gr-enter { animation: gr-enter 200ms var(--ease-out-quart) both; }
+.gr-pop { animation: gr-pop 220ms var(--ease-out-quart) both; }
+.gr-stamp { animation: gr-stamp 260ms var(--ease-out-quart) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-enter, .gr-pop, .gr-stamp { animation: none; }
+}
