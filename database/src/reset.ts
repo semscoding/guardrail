@@ -38,7 +38,9 @@ export async function resetDatabase(
 ): Promise<{ migrations: MigrateResult; seeded: SeedResult }> {
   if (process.env.NODE_ENV === "production") {
     const expected = process.env.DEMO_ADMIN_TOKEN;
-    const provided = options.adminToken ?? process.env.DEMO_ADMIN_TOKEN;
+    // The caller must bring the token itself (request header, CLI flag). Never fall back to the
+    // server's own env var: that would make every call in production authorized.
+    const provided = options.adminToken;
     if (!expected || provided !== expected) {
       throw new Error("Refusing to reset database in production without valid DEMO_ADMIN_TOKEN");
     }
@@ -55,8 +57,14 @@ const isMain =
   process.argv[1] !== undefined &&
   path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
 
+/** CLI: `npm run db:reset -- --token=<DEMO_ADMIN_TOKEN>` (only checked when NODE_ENV=production). */
+function tokenFromArgs(argv: readonly string[]): string | undefined {
+  const flag = argv.find((a) => a.startsWith("--token="));
+  return flag ? flag.slice("--token=".length) : undefined;
+}
+
 if (isMain) {
-  resetDatabase()
+  resetDatabase({ adminToken: tokenFromArgs(process.argv.slice(2)) })
     .then(({ migrations }) => {
       console.log(`ok    db:reset complete (${migrations.applied.length} migrations applied, seed loaded)`);
     })
