@@ -34,4 +34,26 @@ for (const inv of mockInvoices) {
   }
 }
 
+for (const event of Object.values(mockRunEvents).flat()) {
+  if (event.type === "step" && event.untrustedContent) {
+    const { text, flags } = event.untrustedContent;
+    let prevEnd = 0;
+    for (const flag of flags) {
+      if (text.slice(flag.start, flag.end) !== flag.phrase) {
+        failed += 1;
+        console.error(
+          `FAIL  run ${event.runId} seq ${event.seq}: flag span [${flag.start}, ${flag.end}) does not match phrase "${flag.phrase}"`,
+        );
+      }
+      if (flag.start < prevEnd) {
+        failed += 1;
+        console.error(
+          `FAIL  run ${event.runId} seq ${event.seq}: overlapping or unsorted flag "${flag.phrase}"`,
+        );
+      }
+      prevEnd = flag.end;
+    }
+  }
+}
+
 process.exit(failed ? 1 : 0);
