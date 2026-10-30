@@ -5,7 +5,7 @@ export const metadata = { title: "Demo shops · GUARDRAIL" };
 
 export default function ShopsIndex() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12">
+    <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-3xl px-4 py-12">
       <h1 className="text-2xl font-semibold">Demo shops</h1>
       <p className="mt-1 text-neutral-600">Staged shops the agent can buy from. One of them is malicious.</p>
       <ul className="mt-8 grid gap-4 sm:grid-cols-3">

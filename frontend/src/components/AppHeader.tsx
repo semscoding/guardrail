@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { FlaskConical, ShieldCheck, TriangleAlert } from "lucide-react";
 
 import { AppNav } from "@/components/AppNav";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,25 @@ function AppNavSkeleton() {
         ))}
       </ul>
     </nav>
+  );
+}
+
+/**
+ * States a fact from config, not a claim: which PayPal environment payments go to.
+ * Live payments get a warning style so a demo can never be confused with real money.
+ */
+function PayPalEnvironmentBadge() {
+  const live = !(process.env.PAYPAL_BASE_URL ?? "https://api-m.sandbox.paypal.com").includes("sandbox");
+  return live ? (
+    <Badge variant="block" className="font-medium">
+      <TriangleAlert aria-hidden="true" />
+      <span>PayPal live</span>
+    </Badge>
+  ) : (
+    <Badge variant="secondary" className="font-medium">
+      <FlaskConical aria-hidden="true" />
+      <span>PayPal sandbox</span>
+    </Badge>
   );
 }
 
@@ -61,10 +80,7 @@ export function AppHeader() {
         </div>
 
         <div className="order-2 flex h-13 items-center gap-2 md:order-3 md:h-auto">
-          <Badge variant="allow" className="font-medium">
-            <ShieldCheck aria-hidden="true" />
-            <span>Policy armed</span>
-          </Badge>
+          <PayPalEnvironmentBadge />
         </div>
       </div>
     </header>
