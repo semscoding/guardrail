@@ -34,14 +34,20 @@ sellers from the registry, product data is fetched by the server. Missing eviden
 - Install a dependency in the workspace that uses it: `npm install <pkg> -w frontend`.
 
 ## Ownership (two tracks, never touch the other track's files)
-| | Track A: Claude Code (`feat/core`) | Track B: Antigravity (`feat/ui`) |
-|---|---|---|
-| Owns | `backend/`, `database/`, `services/`, `apis/` (except `apis/src/channel3/` and `apis/src/mocks/`), `frontend/src/app/api/` | `frontend/` (except `frontend/src/app/api/`), `apis/src/channel3/`, `apis/src/mocks/` |
-| Shared, changed only by Track A | `apis/src/domain/`, `apis/src/contracts/`, every `package.json`, `frontend/.env.example`, `AGENTS.md` | request changes on the board with `[!]` |
+Roles since 30-10: **Antigravity builds the core, Claude Code does UI design and the frontend.**
 
-- Track B builds against `apis/src/mocks/` until the real endpoint exists. Mocks must keep passing `npm run contracts:check`.
+| | Track A, core: Antigravity (`feat/core`) | Track B, frontend + UI design: Claude Code (`feat/ui`) |
+|---|---|---|
+| Owns | `backend/`, `database/`, `services/`, `apis/` (except `apis/src/mocks/`; includes the Channel3 adapter), `frontend/src/app/api/` | `frontend/` (except `frontend/src/app/api/`), `apis/src/mocks/` |
+| Shared | `apis/src/domain/`, `apis/src/contracts/`, root `package.json`, `frontend/.env.example`, `AGENTS.md`: changed by Track A, **always reviewed by Track B** before merge | request changes on the board with `[!]` |
+
+- Each track edits only the `package.json` of its own workspaces (`npm install <pkg> -w <workspace>`).
+- Track B builds against `apis/src/mocks/` until the real endpoint exists. Mocks must keep passing `npm run contracts:check`;
+  a contract change may update the mocks it breaks in the same commit.
 - Swap a mock for the real endpoint only when that endpoint is merged to `main`.
-- One branch per track; merge to `main` daily; the other track rebases.
+- Changes to the policy engine (`services/src/policy/`) and the payment flow (`services/src/payments/`) always get a Track B review with the edge cases.
+- One branch per track; merge to `main` daily after review; the other track rebases.
+- Before every merge, from the repo root: `npm run check` (typecheck all workspaces + lint + contracts:check).
 
 ## Peer review (required before anything reaches `main`)
 Every task, Track A's included, is reviewed by the **other** agent on the shared board (`Agent-overdracht.md` in the vault, section *Collegiale review*).
@@ -51,7 +57,7 @@ Every task, Track A's included, is reviewed by the **other** agent on the shared
    **Suggestie** (author decides), **Goed** (keep this).
 3. No blockers: reviewer approves, the author merges to `main` and sets `[x]`. Blockers: `[↺]`, author fixes, back to `[?]`.
 4. Never edit the other track's files to "fix" a finding; comment instead. Disagreement after one round: `[!]`, Sem decides.
-5. Changes to `apis/src/domain/` or `apis/src/contracts/` are always reviewed by Track B (the consumer) before merge.
+5. Changes to `apis/src/domain/` or `apis/src/contracts/` are made by Track A and always reviewed by Track B (the consumer) before merge.
 - Before every merge, from the repo root: `npm run check` (typecheck all workspaces + lint + contracts:check).
 
 ## Commands (repo root)

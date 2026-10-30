@@ -95,9 +95,11 @@ Twee agents tegelijk levert alleen tijd op als ze **nooit dezelfde bestanden aan
 
 **Stap 0 (eerst, samen, ~2 uur):** `apis/src/domain/*` (types) en `apis/src/contracts/*` (zod-schema's van alle endpoints en SSE-events) vastleggen en committen op `main`. Daarna verandert een contract alleen in overleg; de andere track krijgt dan een korte melding.
 
-| | **Track A: Claude** (logica, geld, veiligheid) | **Track B: Antigravity** (UI, integraties) |
+> **Rollen gewisseld op 30-10:** Track A (core) is nu **Antigravity**, Track B (frontend en UI-design) is nu **Claude**. Claude reviewt elke contractwijziging en elke wijziging aan de policy-engine en de betaalflow. Zie [[Taakverdeling]].
+
+| | **Track A: Antigravity** (logica, geld, veiligheid) | **Track B: Claude** (UI-design, frontend) |
 |---|---|---|
-| Eigenaar van | `backend/`, `database/` (incl. **alle migraties**), `services/`, `apis/` (behalve `apis/src/channel3/` en `apis/src/mocks/`), `frontend/src/app/api/`; tests in die workspaces | `frontend/` (behalve `frontend/src/app/api/`): pagina's, `src/components/`, `src/hooks/`, styling/tokens; plus `apis/src/channel3/` en `apis/src/mocks/` |
+| Eigenaar van | `backend/`, `database/` (incl. **alle migraties**), `services/`, `apis/` (behalve `apis/src/mocks/`, incl. de Channel3-adapter), `frontend/src/app/api/`; tests in die workspaces | `frontend/` (behalve `frontend/src/app/api/`): design-richting, pagina's, `src/components/`, `src/hooks/`, styling/tokens; plus `apis/src/mocks/` |
 | Pijler 1 | agent, policy-engine R1–R10, payment-orchestrator, auditketen | Purchasing-scherm, checklist-animatie, bon, AuditGrid |
 | Pijler 3 | dispute-ingest, bewijs, gap-analyse, dossier, indienen | Disputes-queue en dossierscherm |
 | Pijler 2 | Shield-regels, Claude-classificatie, denylist (R10) | Invoices-scherm met gemarkeerde signalen |
