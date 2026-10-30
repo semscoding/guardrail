@@ -3,3 +3,4 @@ export { AppErrorException, appError, statusOf, toAppError } from "./errors";
 export { checkHealth } from "./health";
 export { route, type Auth } from "./http";
 export { createLogger, log } from "./logger";
+export { agentLlm, triageLlm } from "./llm";

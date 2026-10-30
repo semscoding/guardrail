@@ -9,6 +9,8 @@ const Env = z.object({
   PAYPAL_CLIENT_SECRET: z.string().min(1),
   PAYPAL_BASE_URL: z.url().default("https://api-m.sandbox.paypal.com"),
   PAYPAL_WEBHOOK_ID: z.string().optional(),
+  /** The buyer wallet saved once with the policy (vault). Without it the agent cannot pay. */
+  PAYPAL_VAULT_ID: z.string().optional(),
   DATABASE_URL: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   CHANNEL3_API_KEY: z.string().optional(),
