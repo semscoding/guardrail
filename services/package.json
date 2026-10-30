@@ -11,7 +11,8 @@
     "./audit": "./src/audit/index.ts",
     "./policy": "./src/policy/index.ts",
     "./invoices": "./src/invoices/index.ts",
-    "./disputes": "./src/disputes/index.ts"
+    "./disputes": "./src/disputes/index.ts",
+    "./agent": "./src/agent/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@guardrail/apis": "*",
-    "@guardrail/database": "*"
+    "@guardrail/database": "*",
+    "zod": "^4.6.7"
   }
 }

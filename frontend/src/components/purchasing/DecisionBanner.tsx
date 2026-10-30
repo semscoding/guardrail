@@ -22,7 +22,12 @@ export function DecisionBanner({ decision, payment }: { decision: Decision; paym
       body: `Broken: ${broken.join(", ")}. The PayPal authorization${amount ? ` for ${amount}` : ""} was voided, never captured.`,
       tone: "border-block-border bg-block-soft text-block",
     },
-    NEEDS_APPROVAL: {
+    NEEDS_APPROVAL: payment?.status === "CAPTURED" ? {
+      icon: CircleCheck,
+      title: amount ? `Approved and paid ${amount}` : "Approved and paid",
+      body: "You approved it, so GUARDRAIL captured the payment.",
+      tone: "border-allow-border bg-allow-soft text-allow",
+    } : {
       icon: Hand,
       title: "Waiting for your approval",
       body: `${amount ?? "This purchase"} is above your approval limit. Nothing is paid until you approve.`,

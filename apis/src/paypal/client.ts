@@ -140,8 +140,8 @@ export const authorizeOrder = (orderId: string, requestId?: string) =>
 export const captureAuthorization = (authorizationId: string, requestId?: string) =>
   call<Capture>("POST", `/v2/payments/authorizations/${authorizationId}/capture`, { final_capture: true }, requestId);
 
-export const voidAuthorization = (authorizationId: string) =>
-  call("POST", `/v2/payments/authorizations/${authorizationId}/void`);
+export const voidAuthorization = (authorizationId: string, requestId?: string) =>
+  call("POST", `/v2/payments/authorizations/${authorizationId}/void`, undefined, requestId);
 
 /** First authorization on an order, if any. */
 export const authorizationOf = (order: PayPalOrder): Authorization | undefined =>

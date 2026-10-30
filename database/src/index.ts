@@ -36,3 +36,14 @@ export {
   listDeniedPayees,
   listInboundInvoices,
 } from "./repositories/invoices";
+export {
+  appendRunEvent,
+  getRun,
+  insertPolicyDecisionInTx,
+  insertProposalInTx,
+  insertRun,
+  listRunEvents,
+  paymentRowToSummary,
+  updateRunStatus,
+  type NewRunEvent,
+} from "./repositories/runs";

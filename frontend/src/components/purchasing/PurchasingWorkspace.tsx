@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useMemo, useState, type FormEvent } from "react";
-import { RotateCcw, Sparkles } from "lucide-react";
+import { useId, useState, type FormEvent } from "react";
+import { Check, RotateCcw, Sparkles } from "lucide-react";
+import { ENDPOINTS } from "@guardrail/apis/contracts";
 import type { PolicyVersion } from "@guardrail/apis/domain";
 import { mockRuns } from "@guardrail/apis/mocks";
 
@@ -11,38 +12,83 @@ import { PolicyCard } from "@/components/purchasing/PolicyCard";
 import { Receipt } from "@/components/purchasing/Receipt";
 import { RuleChecklist } from "@/components/purchasing/RuleChecklist";
 import { Button } from "@/components/ui/button";
-import { mockRunSource, useRunStream } from "@/hooks/useRunStream";
+import { sseRunSource, useRunStream } from "@/hooks/useRunStream";
 
-/** Recorded demo runs. Replaced by POST /api/runs once the agent endpoint is on main. */
+/** The two demo scenes, offered as suggestions. Any other request works too. */
 const DEMO_REQUESTS = mockRuns.map((run) => ({ runId: run.id, command: run.command }));
 
-const normalize = (text: string) => text.trim().toLowerCase().replace(/\s+/g, " ");
+const CreateRunResponse = ENDPOINTS.createRun.response;
+const ApproveRunResponse = ENDPOINTS.approveRun.response;
+
+/** POSTs and parses the { data } | { error } envelope; throws the safe error message. */
+async function post<T>(url: string, schema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false } }, body?: unknown) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const parsed = schema.safeParse(await res.json().catch(() => null));
+  if (!parsed.success) throw new Error("The server sent an unexpected response.");
+  return parsed.data;
+}
 
 export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
-  const source = useMemo(() => mockRunSource(700), []);
-  const { view, state, streamError, start, reset } = useRunStream(source);
+  const { view, state, streamError, start, resume, reset, lastSeq } = useRunStream(sseRunSource);
   const [command, setCommand] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState<string | null>(null);
   const inputId = useId();
   const hintId = useId();
-  const streaming = state === "streaming";
+  const streaming = state === "streaming" || submitting;
   const started = state !== "idle";
+  const awaitingApproval =
+    state === "done" &&
+    view.finalStatus === "NEEDS_APPROVAL" &&
+    view.decision?.outcome === "NEEDS_APPROVAL" &&
+    view.payment?.status === "AUTHORIZED";
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    const match = DEMO_REQUESTS.find((r) => normalize(r.command) === normalize(command));
-    if (!match) {
-      setFormError("Free-form requests work once the agent is connected. For now, pick one of the demo requests below.");
-      return;
-    }
     setFormError(null);
-    start(match.runId);
+    setApproveError(null);
+    setSubmitting(true);
+    try {
+      const res = await post(
+        "/api/runs",
+        CreateRunResponse,
+        { policyId: policy.policyId, command: command.trim() },
+      );
+      if ("error" in res) setFormError(res.error.message);
+      else start(res.data.runId);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Could not start the agent.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function approve() {
+    if (!view.runId) return;
+    setApproving(true);
+    setApproveError(null);
+    try {
+      const res = await post(`/api/runs/${encodeURIComponent(view.runId)}/approve`, ApproveRunResponse);
+      if ("error" in res) setApproveError(res.error.message);
+      else resume(view.runId, lastSeq);
+    } catch (err) {
+      setApproveError(err instanceof Error ? err.message : "Could not approve the purchase.");
+    } finally {
+      setApproving(false);
+    }
   }
 
   function restart() {
     reset();
     setCommand("");
     setFormError(null);
+    setApproveError(null);
   }
 
   return (
@@ -82,7 +128,7 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
           </div>
 
           <div id={hintId} className="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink-secondary">
-            <span>Demo requests:</span>
+            <span>Try:</span>
             {DEMO_REQUESTS.map((r) => (
               <button
                 key={r.runId}
@@ -117,7 +163,28 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
             {view.proposal || view.checks.length ? (
               <RuleChecklist checks={view.checks} proposal={view.proposal} />
             ) : null}
+            {view.error ? (
+              <p role="alert" className="rounded-lg border border-block-border bg-block-soft p-card text-sm text-block">
+                {view.error.message}
+              </p>
+            ) : null}
             {view.decision ? <DecisionBanner decision={view.decision} payment={view.payment} /> : null}
+            {awaitingApproval ? (
+              <div className="flex flex-col gap-2 rounded-lg border border-approval-border bg-surface-raised p-card sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-ink">
+                  The PayPal authorization is still open. Approve to capture it; nothing is paid until you do.
+                </p>
+                <Button type="button" size="lg" onClick={approve} disabled={approving}>
+                  <Check aria-hidden="true" />
+                  {approving ? "Capturing…" : "Approve and pay"}
+                </Button>
+              </div>
+            ) : null}
+            {approveError ? (
+              <p role="alert" className="text-sm text-block">
+                {approveError}
+              </p>
+            ) : null}
             {view.payment ? <Receipt payment={view.payment} /> : null}
           </>
         ) : (
