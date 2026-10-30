@@ -6,11 +6,12 @@
   "type": "module",
   "exports": {
     "./catalog": "./src/catalog/index.ts",
-    "./payments": "./src/payments/index.ts"
+    "./payments": "./src/payments/index.ts",
+    "./policy": "./src/policy/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "tsx --test 'tests/**/*.test.ts'"
   },
   "dependencies": {
     "@guardrail/apis": "*",
