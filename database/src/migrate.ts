@@ -28,7 +28,7 @@ export async function migrate(
     );
   `);
 
-  const entries = await readdir(migrationsDir);
+  const entries = await readdir(/*turbopackIgnore: true*/ migrationsDir);
   const files = entries.filter((name) => name.endsWith(".sql")).sort();
 
   const existing = await active.query<{ version: string }>(
@@ -45,7 +45,7 @@ export async function migrate(
       continue;
     }
 
-    const sql = await readFile(path.join(migrationsDir, file), "utf8");
+    const sql = await readFile(/*turbopackIgnore: true*/ path.join(migrationsDir, file), "utf8");
     await active.withTx(async (tx) => {
       await tx.exec(sql);
       await tx.query("INSERT INTO schema_migrations (version) VALUES ($1)", [file]);
