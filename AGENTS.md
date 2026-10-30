@@ -42,6 +42,16 @@ sellers from the registry, product data is fetched by the server. Missing eviden
 - Track B builds against `apis/src/mocks/` until the real endpoint exists. Mocks must keep passing `npm run contracts:check`.
 - Swap a mock for the real endpoint only when that endpoint is merged to `main`.
 - One branch per track; merge to `main` daily; the other track rebases.
+
+## Peer review (required before anything reaches `main`)
+Every task, Track A's included, is reviewed by the **other** agent on the shared board (`Agent-overdracht.md` in the vault, section *Collegiale review*).
+1. Author: push the branch, set the task to `[?]` with branch + commit hash, and say what was not tested.
+2. Reviewer: start every session with open `[?]` reviews before new work. Write findings under **Review** in the task,
+   each with a label and `file:line`: **Blocker** (must fix before merge), **Moet** (fix before feature freeze 6-11),
+   **Suggestie** (author decides), **Goed** (keep this).
+3. No blockers: reviewer approves, the author merges to `main` and sets `[x]`. Blockers: `[↺]`, author fixes, back to `[?]`.
+4. Never edit the other track's files to "fix" a finding; comment instead. Disagreement after one round: `[!]`, Sem decides.
+5. Changes to `apis/src/domain/` or `apis/src/contracts/` are always reviewed by Track B (the consumer) before merge.
 - Before every merge, from the repo root: `npm run check` (typecheck all workspaces + lint + contracts:check).
 
 ## Commands (repo root)
