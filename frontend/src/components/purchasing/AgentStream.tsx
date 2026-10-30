@@ -1,5 +1,7 @@
-import { Bot, CreditCard, PackageSearch, Search, ShoppingCart } from "lucide-react";
+import type { ReactNode } from "react";
+import { Bot, CreditCard, PackageSearch, Search, ShieldAlert, ShoppingCart } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { UntrustedContent } from "@guardrail/apis/domain";
 
 import { elapsedLabel, type StepEvent } from "@/lib/runView";
 
@@ -8,6 +10,45 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
   get_product: PackageSearch,
   propose_purchase: ShoppingCart,
 };
+
+/**
+ * Text the agent read from a web page, shown as data. Instruction-like phrases are marked by a fixed
+ * detector (not by AI), so the viewer sees what tried to steer the agent.
+ */
+function UntrustedText({ content }: { content: UntrustedContent }) {
+  const parts: ReactNode[] = [];
+  let cursor = 0;
+  content.flags.forEach((flag, i) => {
+    parts.push(content.text.slice(cursor, flag.start));
+    parts.push(
+      <mark key={i} className="rounded-sm bg-block-soft px-0.5 text-block underline decoration-block decoration-2 underline-offset-2">
+        {content.text.slice(flag.start, flag.end)}
+      </mark>,
+    );
+    cursor = flag.end;
+  });
+  parts.push(content.text.slice(cursor));
+
+  const flagged = content.flags.length > 0;
+  return (
+    <details open={flagged} className="col-span-2 col-start-2 rounded-md border border-border bg-surface-subtle px-3 py-2">
+      <summary className="cursor-pointer text-xs text-ink-secondary">
+        {flagged ? (
+          <span className="inline-flex items-center gap-1.5 font-medium text-block">
+            <ShieldAlert aria-hidden="true" className="size-3.5" />
+            Page text tried to instruct the agent ({content.flags.length} {content.flags.length === 1 ? "phrase" : "phrases"})
+          </span>
+        ) : (
+          "Page text the agent read"
+        )}
+      </summary>
+      <p className="mt-2 whitespace-pre-wrap font-mono text-xs leading-5 text-ink">{parts}</p>
+      <p className="mt-2 text-xs text-ink-muted">
+        Source: {content.source}. Marked by a fixed pattern check. GUARDRAIL never treats this text as evidence.
+      </p>
+    </details>
+  );
+}
 
 /** What the agent did, in order. Server steps (no tool) are PayPal work the agent cannot do itself. */
 export function AgentStream({
@@ -42,6 +83,7 @@ export function AgentStream({
                 <span className="font-mono text-xs leading-5 text-ink-muted tabular-nums">
                   {elapsedLabel(startedAt, step.at)}
                 </span>
+                {step.untrustedContent ? <UntrustedText content={step.untrustedContent} /> : null}
               </li>
             );
           })}
