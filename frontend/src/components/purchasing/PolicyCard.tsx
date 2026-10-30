@@ -41,7 +41,7 @@ export function PolicyCard({ policy }: { policy: PolicyVersion }) {
 
       <ol className="mt-4 space-y-2.5">
         {ruleSentences(policy).map(([id, sentence]) => (
-          <li key={id} className="grid grid-cols-[2.5rem_1fr] gap-2 text-sm">
+          <li key={id} id={`rule-${id}`} className="grid scroll-mt-24 grid-cols-[2.5rem_1fr] gap-2 rounded text-sm target:bg-approval-soft">
             <span className="font-mono text-xs leading-5 text-ink-muted">{id}</span>
             <span className="text-ink">{sentence}</span>
           </li>
