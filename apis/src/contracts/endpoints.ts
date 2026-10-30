@@ -41,6 +41,10 @@ export const AnalyzeInvoiceRequest = z.object({ text: z.string().trim().min(1).m
 export const BlockPayeeResponse = z.object({ payeeEmail: z.string(), blocked: z.literal(true) });
 
 export const SubmitDossierRequest = z.object({ dossierVersion: z.number().int().positive() });
+/** A human approves one dossier version; only an APPROVED dossier can be submitted. */
+export const ApproveDossierRequest = z.object({ dossierVersion: z.number().int().positive() });
+export type SubmitDossierRequest = z.infer<typeof SubmitDossierRequest>;
+export type ApproveDossierRequest = z.infer<typeof ApproveDossierRequest>;
 
 export const AuditQuery = z.object({
   pillar: Pillar.optional(),
@@ -101,6 +105,13 @@ export const ENDPOINTS = {
   listDisputes: { method: "GET", path: "/api/disputes", auth: "demo", response: responseOf(z.array(Dispute)) },
   getDispute: { method: "GET", path: "/api/disputes/:id", auth: "demo", response: responseOf(Dispute) },
   draftDossier: { method: "POST", path: "/api/disputes/:id/dossier", auth: "demo", response: responseOf(Dossier) },
+  approveDossier: {
+    method: "POST",
+    path: "/api/disputes/:id/approve",
+    auth: "demo",
+    request: ApproveDossierRequest,
+    response: responseOf(Dispute),
+  },
   submitDossier: {
     method: "POST",
     path: "/api/disputes/:id/submit",

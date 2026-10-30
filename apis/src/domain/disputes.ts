@@ -55,6 +55,13 @@ export const Dossier = z.object({
   missingEvidence: z.array(EvidenceKind),
   sections: z.array(DossierSection),
   status: z.enum(["DRAFT", "APPROVED", "SUBMITTED", "FAILED"]),
+  /**
+   * Who wrote the text: "ai" (Claude), "template" (offline test mode, no AI) or "demo_seed"
+   * (hand-written demo data). Optional so older data stays valid.
+   */
+  draftedBy: z.enum(["ai", "template", "demo_seed"]).optional(),
+  /** Honest status note for the UI, e.g. "Demo dispute: recorded, not sent to PayPal". */
+  note: z.string().nullable().optional(),
   approvedAt: z.iso.datetime().nullable(),
   submittedAt: z.iso.datetime().nullable(),
 });
@@ -69,5 +76,7 @@ export const Dispute = z.object({
   sellerResponseDue: z.iso.datetime().nullable(),
   evidence: z.array(Evidence),
   dossier: Dossier.nullable(),
+  /** Seeded demo dispute: never sent to PayPal. */
+  demo: z.boolean().optional(),
 });
 export type Dispute = z.infer<typeof Dispute>;

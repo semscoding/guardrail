@@ -10,7 +10,8 @@
     "./contracts": "./src/contracts/index.ts",
     "./mocks": "./src/mocks/index.ts",
     "./paypal": "./src/paypal/client.ts",
-    "./llm": "./src/llm/index.ts"
+    "./llm": "./src/llm/index.ts",
+    "./paypal/disputes": "./src/paypal/disputes.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",

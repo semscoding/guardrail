@@ -5,6 +5,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { call } from "@guardrail/apis/paypal";
+import { DISPUTE_WEBHOOK_EVENT_TYPES } from "@guardrail/services/disputes";
 import { WEBHOOK_EVENT_TYPES } from "@guardrail/services/payments";
 
 type Webhook = { id: string; url: string };
@@ -32,7 +33,7 @@ async function main() {
 
   const created = await call<Webhook>("POST", "/v1/notifications/webhooks", {
     url,
-    event_types: WEBHOOK_EVENT_TYPES.map((name) => ({ name })),
+    event_types: [...WEBHOOK_EVENT_TYPES, ...DISPUTE_WEBHOOK_EVENT_TYPES].map((name) => ({ name })),
   });
   setEnvValue("frontend/.env.local", "PAYPAL_WEBHOOK_ID", created.id);
   console.log(`Webhook ${created.id} → ${url}\nSaved PAYPAL_WEBHOOK_ID to frontend/.env.local. Restart the dev server to pick it up.`);
