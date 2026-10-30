@@ -26,7 +26,8 @@
     "webhook:register": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/register-webhook.ts",
     "invoices:seed": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/seed-invoices.ts",
     "invoices:stage-scam": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/stage-scam-invoice.ts",
-    "disputes:sync": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/disputes-sync.ts"
+    "disputes:sync": "tsx --env-file-if-exists=frontend/.env.local backend/scripts/disputes-sync.ts",
+    "start:render": "npm run db:migrate && npm run db:seed && npm run invoices:seed && npm run start"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -34,5 +35,8 @@
     "eslint-config-next": "16.4.3",
     "tsx": "^4.23.15",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

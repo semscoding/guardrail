@@ -29,6 +29,15 @@ npm run dev
 npm run check                                  # typecheck + lint + contract check
 ```
 
+## Deploy on Render
+`render.yaml` is a Render Blueprint: one web service (the Next.js app with its API) and one Postgres database in Frankfurt.
+
+1. Render → **New → Blueprint** → connect the GitHub repo → Render reads `render.yaml`.
+2. Fill in the values it asks for (`sync: false`): the PayPal sandbox credentials, `PAYPAL_VAULT_ID`, the `PAYEE_EMAIL_*` addresses and `ANTHROPIC_API_KEY`. Without the Anthropic key the app runs in labelled offline test mode.
+3. Deploy. On every start `npm run start:render` applies migrations and seeds the demo policy, dispute and invoices (all idempotent), then starts Next.js.
+4. Point PayPal at the live URL: `npm run webhook:register -- https://<your-app>.onrender.com` (locally), then copy the new `PAYPAL_WEBHOOK_ID` into Render's environment.
+5. Check `https://<your-app>.onrender.com/api/health`: `db`, `paypal` and (with a key) `anthropic` should be `ok`.
+
 ## PayPal sandbox spike
 Tests the payment side end-to-end: one €89 order authorized and **captured**, one €389 order authorized and **voided** (as the policy engine will do), and whether a saved wallet lets the agent pay without a buyer click.
 

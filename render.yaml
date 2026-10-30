@@ -1,0 +1,51 @@
+# Render Blueprint: one web service (Next.js app + API) and one Postgres database.
+# Connect the GitHub repo in Render → New → Blueprint. Values marked sync: false are asked for once.
+services:
+  - type: web
+    name: guardrail
+    runtime: node
+    region: frankfurt
+    # Free instances sleep after inactivity (≈50 s cold start); starter keeps the demo link instant for the jury.
+    plan: starter
+    # Dev dependencies are needed at runtime for the migration and seed scripts (tsx).
+    buildCommand: npm ci --include=dev && npm run build
+    # Migrations and seeds are idempotent, so every deploy and restart is safe.
+    startCommand: npm run start:render
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: guardrail-db
+          property: connectionString
+      - key: DEMO_ADMIN_TOKEN
+        generateValue: true
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_VAULT_ID
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: PAYEE_EMAIL_NORDIC_GEAR
+        sync: false
+      - key: PAYEE_EMAIL_EU_SPORTDIRECT
+        sync: false
+      - key: PAYEE_EMAIL_DEALZONE_X
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+databases:
+  - name: guardrail-db
+    region: frankfurt
+    # The free database expires after 30 days; the jury may open the link until winners are announced (21-12).
+    plan: basic-256mb
+    postgresMajorVersion: "17"
