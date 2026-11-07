@@ -30,9 +30,17 @@ export const CreatePolicyVersionRequest = z.object({
   validUntil: z.iso.datetime(),
 });
 
+/**
+ * "compromised" is a demo setting: the agent is told to obey shop pages, to show what the policy engine
+ * catches when an AI is fooled. Every run in this mode is labelled as a simulation in the stream and UI.
+ */
+export const AgentMode = z.enum(["standard", "compromised"]);
+export type AgentMode = z.infer<typeof AgentMode>;
+
 export const CreateRunRequest = z.object({
   policyId: z.string(),
   command: z.string().trim().min(3).max(500),
+  agentMode: AgentMode.default("standard"),
 });
 export const CreateRunResponse = z.object({ runId: z.string() });
 

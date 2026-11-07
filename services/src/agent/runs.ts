@@ -5,7 +5,7 @@
 
 import { EventEmitter } from "node:events";
 import { randomUUID } from "node:crypto";
-import type { AppError, RunEvent } from "@guardrail/apis/contracts";
+import type { AgentMode, AppError, RunEvent } from "@guardrail/apis/contracts";
 import type { Llm } from "@guardrail/apis/llm";
 import type { Logger, PolicyVersion, Run, RunStatus } from "@guardrail/apis/domain";
 import {
@@ -79,13 +79,14 @@ async function fail(runId: string, err: unknown, deps: Pick<RunDeps, "toAppError
 
 /** Runs the agent and the orchestrator for an existing run. Never throws: failures end the run FAILED. */
 export async function executeRun(
-  run: { id: string; command: string; policy: PolicyVersion },
+  run: { id: string; command: string; policy: PolicyVersion; agentMode?: AgentMode },
   deps: RunDeps,
 ): Promise<RunStatus> {
   const emit = (event: NewRunEvent) => publishRunEvent(run.id, event);
   try {
     const proposal = await runAgent(run.command, {
       llm: deps.llm,
+      mode: run.agentMode ?? "standard",
       emit: (step) => emit({ type: "step", ...step }).then(() => undefined),
     });
     if (!proposal) {
@@ -102,7 +103,7 @@ export async function executeRun(
       checkIntervalMs: deps.checkIntervalMs,
     });
     await finish(run.id, status);
-    deps.log.info("run.finished", { runId: run.id, status, mode: deps.llm.mode });
+    deps.log.info("run.finished", { runId: run.id, status, mode: deps.llm.mode, agentMode: run.agentMode ?? "standard" });
     return status;
   } catch (err) {
     await fail(run.id, err, deps);
@@ -114,12 +115,12 @@ export async function executeRun(
  * POST /api/runs: creates the run and starts it in the background (in-process).
  * Returns at once with the id; the client follows along on the SSE stream.
  */
-export async function startRun(input: { policyId: string; command: string }, deps: RunDeps): Promise<{ runId: string }> {
+export async function startRun(input: { policyId: string; command: string; agentMode?: AgentMode }, deps: RunDeps): Promise<{ runId: string }> {
   const policy = await getActivePolicy(input.policyId);
   if (!policy) throw new RunFailure({ code: "NOT_FOUND", message: `No policy "${input.policyId}".` });
   const runId = `run_${randomUUID()}`;
   await insertRun({ id: runId, policyId: policy.policyId, policyVersion: policy.version, command: input.command });
-  void executeRun({ id: runId, command: input.command, policy }, deps);
+  void executeRun({ id: runId, command: input.command, policy, agentMode: input.agentMode }, deps);
   return { runId };
 }
 

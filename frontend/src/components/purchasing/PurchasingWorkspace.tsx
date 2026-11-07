@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Check, RotateCcw, Sparkles } from "lucide-react";
+import { Check, RotateCcw, ShieldAlert, Sparkles } from "lucide-react";
 import { ENDPOINTS } from "@guardrail/apis/contracts";
 import type { PolicyVersion } from "@guardrail/apis/domain";
 import { mockRuns } from "@guardrail/apis/mocks";
@@ -35,12 +35,17 @@ async function post<T>(url: string, schema: { safeParse: (v: unknown) => { succe
 export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
   const { view, state, streamError, start, resume, reset, lastSeq } = useRunStream(sseRunSource);
   const [command, setCommand] = useState("");
+  // Demo setting: simulate an agent that a shop page has fooled. Always labelled as a simulation.
+  const [compromised, setCompromised] = useState(false);
+  const [runCompromised, setRunCompromised] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [approving, setApproving] = useState(false);
   const [approveError, setApproveError] = useState<string | null>(null);
   const inputId = useId();
   const hintId = useId();
+  const modeId = useId();
+  const modeHintId = useId();
   const streaming = state === "streaming" || submitting;
   const started = state !== "idle";
   const awaitingApproval =
@@ -58,10 +63,13 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
       const res = await post(
         "/api/runs",
         CreateRunResponse,
-        { policyId: policy.policyId, command: command.trim() },
+        { policyId: policy.policyId, command: command.trim(), agentMode: compromised ? "compromised" : "standard" },
       );
       if ("error" in res) setFormError(res.error.message);
-      else start(res.data.runId);
+      else {
+        setRunCompromised(compromised);
+        start(res.data.runId);
+      }
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Could not start the agent.");
     } finally {
@@ -89,6 +97,7 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
     setCommand("");
     setFormError(null);
     setApproveError(null);
+    setRunCompromised(false);
   }
 
   return (
@@ -144,6 +153,26 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
               </button>
             ))}
           </div>
+          <div className="mt-4 flex items-start gap-2.5 border-t border-border pt-3">
+            <input
+              id={modeId}
+              type="checkbox"
+              checked={compromised}
+              onChange={(e) => setCompromised(e.target.checked)}
+              disabled={streaming}
+              aria-describedby={modeHintId}
+              className="mt-0.5 size-4 shrink-0 accent-scam focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            />
+            <div className="text-sm">
+              <label htmlFor={modeId} className="font-medium text-ink">
+                Simulate a compromised agent
+              </label>
+              <p id={modeHintId} className="text-ink-secondary">
+                Demo setting: the agent is told to trust shop pages and follow their instructions, to show what GUARDRAIL
+                catches when an AI is fooled.
+              </p>
+            </div>
+          </div>
           {formError ? (
             <p role="alert" className="mt-3 text-sm text-block">
               {formError}
@@ -159,6 +188,12 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
 
         {started ? (
           <>
+            {runCompromised ? (
+              <p className="flex items-center gap-2 rounded-lg border border-scam-border bg-scam-soft px-card py-3 text-sm font-semibold text-scam">
+                <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
+                Simulated compromised agent: it follows shop instructions on purpose. The policy engine is unchanged.
+              </p>
+            ) : null}
             <AgentStream steps={view.steps} startedAt={view.startedAt} streaming={streaming} />
             {view.proposal || view.checks.length ? (
               <RuleChecklist checks={view.checks} proposal={view.proposal} />
