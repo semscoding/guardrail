@@ -61,7 +61,7 @@ export function AgentStream({
   streaming: boolean;
 }) {
   return (
-    <section aria-labelledby="stream-title" className="rounded-lg border border-border bg-surface-raised p-card">
+    <section aria-labelledby="stream-title" className="rounded-lg border border-border bg-surface-raised shadow-card p-card">
       <h2 id="stream-title" className="text-base font-semibold text-ink">
         What the agent did
       </h2>
@@ -70,17 +70,19 @@ export function AgentStream({
           {streaming ? "Starting the agent…" : "Nothing yet. Give the agent a request to see each step here."}
         </p>
       ) : (
-        <ol className="mt-3 space-y-2" aria-live="polite">
+        <ol className="relative mt-4 space-y-3 before:absolute before:top-2 before:bottom-2 before:left-[13px] before:w-px before:bg-border" aria-live="polite">
           {steps.map((step) => {
             const Icon = step.tool ? (TOOL_ICONS[step.tool] ?? Bot) : CreditCard;
             return (
-              <li key={step.seq} className="gr-enter grid grid-cols-[1.25rem_1fr_auto] items-start gap-2.5 text-sm">
-                <Icon aria-hidden="true" className="mt-0.5 size-4 text-ink-muted" />
-                <span className="text-ink">
+              <li key={step.seq} className="gr-enter relative grid grid-cols-[1.75rem_1fr_auto] items-start gap-3 text-sm">
+                <span className="inline-flex size-7 items-center justify-center rounded-full border border-border bg-surface-raised text-ink-secondary">
+                  <Icon aria-hidden="true" className="size-3.5" />
+                </span>
+                <span className="pt-1 leading-5 text-ink">
                   {step.message}
                   {step.tool === null ? <span className="text-ink-muted"> (server, not the agent)</span> : null}
                 </span>
-                <span className="font-mono text-xs leading-5 text-ink-muted tabular-nums">
+                <span className="pt-1 font-mono text-xs leading-5 text-ink-muted tabular-nums">
                   {elapsedLabel(startedAt, step.at)}
                 </span>
                 {step.untrustedContent ? <UntrustedText content={step.untrustedContent} /> : null}

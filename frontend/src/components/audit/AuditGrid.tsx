@@ -26,17 +26,21 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 const gridTheme = themeQuartz.withParams({
   fontFamily: "var(--font-sans)",
   fontSize: 14,
-  foregroundColor: "#0f172a",
-  backgroundColor: "#ffffff",
-  headerBackgroundColor: "#eef1f5",
-  headerTextColor: "#334155",
-  borderColor: "#dce1e8",
-  accentColor: "#0b3b66",
-  rowHoverColor: "#f7f8fa",
-  selectedRowBackgroundColor: "#e6eef6",
+  foregroundColor: "var(--ink)",
+  backgroundColor: "var(--surface-raised)",
+  headerBackgroundColor: "var(--surface)",
+  headerTextColor: "var(--ink-muted)",
+  headerFontSize: 12,
+  headerFontWeight: 500,
+  borderColor: "var(--border)",
+  accentColor: "var(--accent-ink)",
+  rowHoverColor: "var(--surface)",
+  selectedRowBackgroundColor: "var(--accent-soft)",
   wrapperBorderRadius: 8,
+  wrapperBorder: { color: "var(--border)" },
   rowHeight: 48,
   headerHeight: 40,
+  cellHorizontalPadding: 16,
 });
 
 type Tone = "allow" | "block" | "approval" | "scam" | "secondary";
@@ -124,8 +128,7 @@ const PILLARS: { value: Pillar | "all"; label: string }[] = [
   { value: "system", label: "System" },
 ];
 
-const selectClass =
-  "h-9 rounded-md border border-border-strong bg-surface-raised px-2.5 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const selectClass = "gr-field h-9 px-2.5 text-sm";
 
 export function AuditGrid({ events }: { events: AuditEvent[] }) {
   const apiRef = useRef<GridApi<AuditEvent> | null>(null);
@@ -222,7 +225,7 @@ export function AuditGrid({ events }: { events: AuditEvent[] }) {
             value={quickFilter}
             onChange={(e) => setQuickFilter(e.target.value)}
             placeholder="Order ID, payee, rule, summary…"
-            className="h-9 rounded-md border border-border-strong bg-surface-raised px-3 text-sm text-ink placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="gr-field h-9 px-3 text-sm"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm text-ink-secondary">
@@ -257,7 +260,7 @@ export function AuditGrid({ events }: { events: AuditEvent[] }) {
       </p>
 
       <div className={cn("grid gap-4", selected && "xl:grid-cols-[1fr_22rem]")}>
-        <div className="h-[560px] min-w-0">
+        <div className="h-[560px] min-w-0 rounded-lg shadow-card">
           <AgGridReact<AuditEvent>
             theme={gridTheme}
             rowData={events}
@@ -285,7 +288,7 @@ export function AuditGrid({ events }: { events: AuditEvent[] }) {
         {selected ? (
           <aside
             aria-labelledby="audit-detail-title"
-            className="rounded-lg border border-border bg-surface-raised p-card text-sm"
+            className="rounded-lg border border-border bg-surface-raised shadow-card p-card text-sm"
           >
             <div className="flex items-start justify-between gap-2">
               <h2 id="audit-detail-title" className="text-base font-semibold text-ink">

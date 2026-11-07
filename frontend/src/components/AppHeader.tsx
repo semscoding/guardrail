@@ -1,90 +1,80 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { FlaskConical, ShieldCheck, TriangleAlert } from "lucide-react";
+import { FlaskConical, TriangleAlert } from "lucide-react";
 
 import { AppNav } from "@/components/AppNav";
-import { Badge } from "@/components/ui/badge";
-import { NAV_ITEMS } from "@/lib/navigation";
+import { BrandMark } from "@/components/BrandMark";
 import { ResetDemoButton } from "@/components/ResetDemoButton";
 
-function AppNavSkeleton() {
-  return (
-    <nav aria-label="Primary" className="w-full md:w-auto">
-      <ul className="grid grid-cols-5 gap-1 md:flex md:items-center md:gap-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-          <li key={href} className="min-w-0">
-            <Link
-              href={href}
-              className="relative flex flex-col items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[11px] font-medium leading-tight text-ink-secondary md:flex-row md:gap-2 md:px-3 md:py-1.5 md:text-sm"
-            >
-              <Icon aria-hidden="true" className="size-4 shrink-0 text-ink-muted" />
-              <span className="truncate">{label}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
+const isLive = () => !(process.env.PAYPAL_BASE_URL ?? "https://api-m.sandbox.paypal.com").includes("sandbox");
 
 /**
  * States a fact from config, not a claim: which PayPal environment payments go to.
- * Live payments get a warning style so a demo can never be confused with real money.
+ * Sandbox reads like a test-mode bar; live gets a warning so a demo is never confused with real money.
  */
-function PayPalEnvironmentBadge() {
-  const live = !(process.env.PAYPAL_BASE_URL ?? "https://api-m.sandbox.paypal.com").includes("sandbox");
-  return live ? (
-    <Badge variant="block" className="font-medium">
-      <TriangleAlert aria-hidden="true" />
-      <span>PayPal live</span>
-    </Badge>
-  ) : (
-    <Badge variant="secondary" className="font-medium">
-      <FlaskConical aria-hidden="true" />
-      <span>PayPal sandbox</span>
-    </Badge>
+export function EnvironmentBar() {
+  const live = isLive();
+  return (
+    <aside
+      aria-label="Payment environment"
+      className={
+        live
+          ? "sticky top-0 z-50 flex h-8 items-center justify-center gap-2 border-b border-block-border bg-block-soft px-4 text-xs font-semibold text-block"
+          : "sticky top-0 z-50 flex h-8 items-center justify-center gap-2 border-b border-sandbox-border bg-sandbox-soft px-4 text-xs font-semibold text-sandbox"
+      }
+    >
+      {live ? (
+        <TriangleAlert aria-hidden="true" className="size-3.5" />
+      ) : (
+        <FlaskConical aria-hidden="true" className="size-3.5" />
+      )}
+      <span>{live ? "PayPal live" : "PayPal sandbox"}</span>
+      <span aria-hidden="true" className="opacity-50">
+        ·
+      </span>
+      <span className="font-medium">{live ? "real payments" : "no real money moves"}</span>
+    </aside>
   );
 }
 
-export function AppHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface-raised/95 backdrop-blur-xs">
-      <div className="mx-auto flex max-w-[var(--container-shell)] flex-wrap items-center justify-between gap-x-6 px-4 md:h-header md:flex-nowrap md:px-page-x">
-        <div className="flex h-13 items-center gap-3 md:h-auto">
-          <Link
-            href="/"
-            className="group inline-flex items-center gap-2.5 rounded-md py-1 text-ink"
-          >
-            <span
-              aria-hidden="true"
-              className="inline-flex size-7 items-center justify-center rounded-md bg-brand text-brand-foreground shadow-2xs"
-            >
-              <ShieldCheck className="size-4 stroke-[2.25]" />
-            </span>
-            <span className="text-base font-semibold tracking-tight text-ink">
-              GUARDRAIL
-            </span>
-          </Link>
-          <span
-            aria-hidden="true"
-            className="hidden h-4 w-px bg-border xl:inline-block"
-          />
-          <span className="hidden text-xs text-ink-muted xl:inline">
-            AI proposes, code decides
-          </span>
-        </div>
+function NavFallback({ orientation }: { orientation: "vertical" | "horizontal" }) {
+  return <div className={orientation === "vertical" ? "h-[11.5rem]" : "h-14"} aria-hidden="true" />;
+}
 
-        <div className="order-3 -mx-4 w-[calc(100%+2rem)] border-t border-border bg-surface-raised px-2 py-1 md:order-2 md:mx-0 md:w-auto md:border-t-0 md:bg-transparent md:p-0">
-          <Suspense fallback={<AppNavSkeleton />}>
+/** Desktop: sticky left sidebar. Small screens: a compact top bar with a tab row. */
+export function AppSidebar() {
+  return (
+    <>
+      <aside className="sticky top-8 hidden h-[calc(100dvh-2rem)] w-sidebar shrink-0 flex-col border-r border-border bg-surface-sidebar lg:flex">
+        <div className="flex h-16 items-center px-5">
+          <Link href="/" className="rounded-md">
+            <BrandMark />
+          </Link>
+        </div>
+        <div className="px-3">
+          <Suspense fallback={<NavFallback orientation="vertical" />}>
             <AppNav />
           </Suspense>
         </div>
-
-        <div className="order-2 flex h-13 items-center gap-2 md:order-3 md:h-auto">
+        <div className="mt-auto border-t border-border px-5 py-4">
+          <p className="mb-3 text-xs text-ink-muted">AI proposes, code decides</p>
           <ResetDemoButton />
-          <PayPalEnvironmentBadge />
         </div>
-      </div>
-    </header>
+      </aside>
+
+      <header className="sticky top-8 z-40 border-b border-border bg-surface-raised lg:hidden">
+        <div className="flex h-13 items-center justify-between gap-3 px-4">
+          <Link href="/" className="rounded-md">
+            <BrandMark />
+          </Link>
+          <ResetDemoButton />
+        </div>
+        <div className="border-t border-border px-2 py-1">
+          <Suspense fallback={<NavFallback orientation="horizontal" />}>
+            <AppNav orientation="horizontal" label="Primary, compact" />
+          </Suspense>
+        </div>
+      </header>
+    </>
   );
 }

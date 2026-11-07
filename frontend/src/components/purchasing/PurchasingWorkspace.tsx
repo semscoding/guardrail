@@ -102,13 +102,13 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
 
   return (
     <div className="grid items-start gap-section lg:grid-cols-[minmax(18rem,22rem)_1fr]">
-      <div className="lg:sticky lg:top-[calc(var(--spacing-header)+1.5rem)]">
+      <div className="lg:sticky lg:top-14 lg:max-h-[calc(100dvh-4.5rem)] lg:overflow-auto lg:rounded-lg">
         <PolicyCard policy={policy} />
       </div>
 
       <div className="flex min-w-0 flex-col gap-section">
-        <form onSubmit={submit} className="rounded-lg border border-border bg-surface-raised p-card">
-          <label htmlFor={inputId} className="text-base font-semibold text-ink">
+        <form onSubmit={submit} className="rounded-lg border border-border bg-surface-raised shadow-card p-card">
+          <label htmlFor={inputId} className="text-base font-semibold tracking-[-0.01em] text-ink">
             What should the agent buy?
           </label>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
@@ -120,15 +120,15 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
               aria-describedby={hintId}
               aria-invalid={formError ? true : undefined}
               placeholder="Restock our first-aid kit, under €100."
-              className="h-10 min-w-0 flex-1 rounded-md border border-border-strong bg-surface-raised px-3 text-base text-ink placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
+              className="gr-field h-11 min-w-0 flex-1 px-3.5 text-base"
             />
             <div className="flex gap-2">
-              <Button type="submit" size="lg" disabled={streaming || !command.trim()} className="flex-1 sm:flex-none">
+              <Button type="submit" size="lg" className="h-11 flex-1 sm:flex-none" disabled={streaming || !command.trim()}>
                 <Sparkles aria-hidden="true" />
                 {streaming ? "Agent working…" : "Send to agent"}
               </Button>
               {started ? (
-                <Button type="button" size="lg" variant="outline" onClick={restart} disabled={streaming}>
+                <Button type="button" size="lg" variant="outline" className="h-11" onClick={restart} disabled={streaming}>
                   <RotateCcw aria-hidden="true" />
                   Start over
                 </Button>
@@ -147,7 +147,7 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
                   setCommand(r.command);
                   setFormError(null);
                 }}
-                className="rounded-md border border-border bg-surface-subtle px-2.5 py-1 text-ink hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
+                className="rounded-full border border-border bg-surface px-3 py-1 text-ink transition-colors duration-150 hover:border-accent-ink/40 hover:bg-accent-soft hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
               >
                 {r.command}
               </button>
@@ -194,15 +194,6 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
                 Simulated compromised agent: it follows shop instructions on purpose. The policy engine is unchanged.
               </p>
             ) : null}
-            <AgentStream steps={view.steps} startedAt={view.startedAt} streaming={streaming} />
-            {view.proposal || view.checks.length ? (
-              <RuleChecklist checks={view.checks} proposal={view.proposal} />
-            ) : null}
-            {view.error ? (
-              <p role="alert" className="rounded-lg border border-block-border bg-block-soft p-card text-sm text-block">
-                {view.error.message}
-              </p>
-            ) : null}
             {view.decision ? <DecisionBanner decision={view.decision} payment={view.payment} /> : null}
             {awaitingApproval ? (
               <div className="flex flex-col gap-2 rounded-lg border border-approval-border bg-surface-raised p-card sm:flex-row sm:items-center sm:justify-between">
@@ -214,6 +205,15 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
                   {approving ? "Capturing…" : "Approve and pay"}
                 </Button>
               </div>
+            ) : null}
+            <AgentStream steps={view.steps} startedAt={view.startedAt} streaming={streaming} />
+            {view.proposal || view.checks.length ? (
+              <RuleChecklist checks={view.checks} proposal={view.proposal} />
+            ) : null}
+            {view.error ? (
+              <p role="alert" className="rounded-lg border border-block-border bg-block-soft p-card text-sm text-block">
+                {view.error.message}
+              </p>
             ) : null}
             {approveError ? (
               <p role="alert" className="text-sm text-block">

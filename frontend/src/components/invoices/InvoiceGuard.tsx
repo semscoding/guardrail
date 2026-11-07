@@ -8,6 +8,7 @@ import { formatMoney, type Finding, type InboundInvoice, type InvoiceAnalysis, t
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { VerdictBanner } from "@/components/VerdictBanner";
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
   PHONE_NUMBER: "Phone number to call",
@@ -105,7 +106,7 @@ export function InvoiceGuard({ invoices: initial }: { invoices: InboundInvoice[]
   return (
     <div className="grid items-start gap-section lg:grid-cols-[minmax(16rem,22rem)_1fr]">
       <div className="flex flex-col gap-section">
-        <form onSubmit={analyze} className="rounded-lg border border-border bg-surface-raised p-card">
+        <form onSubmit={analyze} className="rounded-lg border border-border bg-surface-raised shadow-card p-card">
           <label htmlFor={textId} className="text-base font-semibold text-ink">
             Check an invoice
           </label>
@@ -115,7 +116,7 @@ export function InvoiceGuard({ invoices: initial }: { invoices: InboundInvoice[]
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={4}
-            className="mt-3 w-full rounded-md border border-border-strong bg-surface-raised p-3 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="gr-field mt-3 w-full p-3 text-sm leading-6"
           />
           <Button type="submit" className="mt-3" disabled={!draft.trim() || checking}>
             <FileSearch aria-hidden="true" />
@@ -128,7 +129,7 @@ export function InvoiceGuard({ invoices: initial }: { invoices: InboundInvoice[]
           ) : null}
         </form>
 
-        <section aria-labelledby="received-title" className="rounded-lg border border-border bg-surface-raised">
+        <section aria-labelledby="received-title" className="rounded-lg border border-border bg-surface-raised shadow-card">
           <h2 id="received-title" className="border-b border-border px-card py-3 text-base font-semibold text-ink">
             Checked invoices
           </h2>
@@ -207,20 +208,13 @@ function InvoiceDetail({ invoice, onBlocked }: { invoice: InboundInvoice; onBloc
     else onBlocked(result.data.payeeEmail);
   }
 
-  const tone = { allow: "border-allow-border bg-allow-soft text-allow", approval: "border-approval-border bg-approval-soft text-approval", scam: "border-scam-border bg-scam-soft text-scam" }[v.variant];
-
   return (
     <div className="flex min-w-0 flex-col gap-section">
-      <div role="status" className={cn("gr-stamp flex items-start gap-4 rounded-lg border-2 p-card", tone)}>
-        <Icon aria-hidden="true" className="mt-0.5 size-8 shrink-0" />
-        <div>
-          <p className="text-2xl font-semibold tracking-tight">{v.label}</p>
-          <p className="mt-1 text-sm text-ink">{v.advice}</p>
-          <AnalysisNote analysis={invoice.analysis} />
-        </div>
-      </div>
+      <VerdictBanner tone={v.variant} icon={Icon} title={v.label} body={v.advice}>
+        <AnalysisNote analysis={invoice.analysis} />
+      </VerdictBanner>
 
-      <section aria-labelledby="invoice-title" className="rounded-lg border border-border bg-surface-raised p-card">
+      <section aria-labelledby="invoice-title" className="rounded-lg border border-border bg-surface-raised shadow-card p-card">
         <h2 id="invoice-title" className="text-base font-semibold text-ink">
           The invoice, with what we found
         </h2>

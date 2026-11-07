@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  ChevronRight,
   FileSearch,
   Scale,
   ScrollText,
@@ -11,13 +12,6 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export const metadata: Metadata = {
   title: "Overview · GUARDRAIL",
@@ -43,15 +37,6 @@ const SECTIONS: readonly SectionLink[] = [
     icon: ShoppingBag,
   },
   {
-    href: "/disputes",
-    pillar: "Pillar 3",
-    title: "Dispute Defender",
-    description:
-      "Assemble Seller Protection evidence packages from orders and carrier tracking for treasurer sign-off.",
-    cta: "Review dispute queue",
-    icon: Scale,
-  },
-  {
     href: "/invoices",
     pillar: "Pillar 2",
     title: "Invoice Guard",
@@ -59,6 +44,15 @@ const SECTIONS: readonly SectionLink[] = [
       "Inspect inbound invoices for refund scams, impersonation, and off-platform payment lures before blocking payees.",
     cta: "Inspect inbound invoices",
     icon: FileSearch,
+  },
+  {
+    href: "/disputes",
+    pillar: "Pillar 3",
+    title: "Dispute Defender",
+    description:
+      "Assemble Seller Protection evidence packages from orders and carrier tracking for treasurer sign-off.",
+    cta: "Review dispute queue",
+    icon: Scale,
   },
   {
     href: "/audit",
@@ -79,43 +73,41 @@ export default function OverviewPage() {
         description="Give AI a budget, not a blank cheque. Every proposal is checked against server-verified evidence before funds move."
       />
 
-      <section aria-label="Guardrail workspaces" className="grid gap-4 sm:grid-cols-2">
-        {SECTIONS.map(({ href, pillar, title, description, cta, icon: Icon }) => (
-          <Card key={href} className="justify-between">
-            <CardHeader className="gap-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-2.5">
-                  <span
-                    aria-hidden="true"
-                    className="inline-flex size-8 items-center justify-center rounded-md border border-border bg-surface-subtle text-brand"
-                  >
-                    <Icon className="size-4" />
-                  </span>
-                  <CardTitle>
-                    <Link
-                      href={href}
-                      className="rounded-xs underline-offset-4 hover:underline"
-                    >
-                      {title}
-                    </Link>
-                  </CardTitle>
-                </div>
-                <Badge variant="secondary">{pillar}</Badge>
-              </div>
-              <CardDescription className="text-ink-secondary">
-                {description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-1">
+      <section
+        aria-label="Guardrail workspaces"
+        className="overflow-hidden rounded-lg border border-border bg-surface-raised shadow-card"
+      >
+        <ul className="divide-y divide-border">
+          {SECTIONS.map(({ href, pillar, title, description, cta, icon: Icon }) => (
+            <li key={href}>
               <Link
                 href={href}
-                className="inline-flex items-center text-sm font-medium text-brand underline-offset-4 hover:underline"
+                className="group grid grid-cols-[auto_1fr] items-start gap-x-4 gap-y-2 px-5 py-5 transition-colors duration-150 hover:bg-surface md:grid-cols-[auto_1fr_auto] md:items-center md:px-6"
               >
-                {cta}
+                <span
+                  aria-hidden="true"
+                  className="inline-flex size-10 items-center justify-center rounded-lg border border-border bg-surface text-ink-secondary transition-colors duration-150 group-hover:border-accent-ink/30 group-hover:text-accent-ink"
+                >
+                  <Icon className="size-[18px] stroke-[1.75]" />
+                </span>
+                <span className="min-w-0">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-lg font-semibold tracking-[-0.01em] text-ink">{title}</span>
+                    <Badge variant="secondary">{pillar}</Badge>
+                  </span>
+                  <span className="mt-1 block max-w-[68ch] text-sm leading-6 text-ink-secondary">{description}</span>
+                </span>
+                <span className="col-start-2 inline-flex items-center gap-1 text-sm font-semibold text-accent-ink md:col-start-3">
+                  {cta}
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-4 transition-transform duration-150 ease-[var(--ease-out-quart)] group-hover:translate-x-0.5"
+                  />
+                </span>
               </Link>
-            </CardContent>
-          </Card>
-        ))}
+            </li>
+          ))}
+        </ul>
       </section>
     </PageShell>
   );

@@ -80,7 +80,7 @@ export function ResetDemoButton() {
             value={token}
             onChange={(e) => setToken(e.target.value)}
             placeholder="Admin token"
-            className="h-8 w-36 rounded-md border border-border-strong bg-surface-raised px-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="gr-field h-8 w-36 px-2 text-sm"
           />
           <Button size="sm" type="submit" disabled={!token.trim()}>
             Reset
