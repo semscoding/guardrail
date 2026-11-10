@@ -90,6 +90,10 @@ const STATUS_BY_EVENT: Record<string, PaymentStatus> = {
 
 export const WEBHOOK_EVENT_TYPES = Object.keys(STATUS_BY_EVENT);
 
+/** Progress of a payment status in SQL: authorized 0, capture pending 1, final (captured, denied, voided) 2. */
+const STATUS_RANK_SQL = (expr: string) =>
+  `(CASE ${expr} WHEN 'AUTHORIZED' THEN 0 WHEN 'CAPTURE_PENDING' THEN 1 ELSE 2 END)`;
+
 /**
  * Stores every incoming event (verified or not, for the audit trail) and applies only verified ones.
  * Returns "duplicate" when PayPal redelivers an event we already have.
@@ -111,9 +115,12 @@ export async function handleWebhookEvent(event: WebhookEvent, verified: boolean)
   if (!status || !orderId) return "ignored" as const;
 
   const isCapture = event.event_type.startsWith("PAYMENT.CAPTURE.");
+  // PayPal does not guarantee delivery order: AUTHORIZATION.CREATED can arrive after the capture.
+  // A status only moves forward (AUTHORIZED → CAPTURE_PENDING → final), never back.
   const updated = await client.query(
     `UPDATE payments
-     SET status = $2, webhook_verified = true, updated_at = now(),
+     SET status = CASE WHEN ${STATUS_RANK_SQL("status")} > ${STATUS_RANK_SQL("$2::text")} THEN status ELSE $2 END,
+         webhook_verified = true, updated_at = now(),
          capture_id = COALESCE($3, capture_id)
      WHERE order_id = $1 RETURNING order_id`,
     [orderId, status, isCapture ? (event.resource?.id ?? null) : null],
