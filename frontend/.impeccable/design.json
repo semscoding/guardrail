@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-07T00:00:00Z",
+  "title": "Design System: GUARDRAIL",
+  "extensions": {
+    "colorMeta": {
+      "brand": {"role":"primary","displayName":"Ink Navy","canonical":"#0e2240","tonalRamp":["#050d19","#0a1830","#0e2240","#2b4166","#4d6285","#7b8ba5","#b3bdcd","#e8ecf2"]},
+      "accent-ink": {"role":"secondary","displayName":"Cobalt","canonical":"#2449c9","tonalRamp":["#0c1a4a","#142d7d","#1b3ba5","#2449c9","#4f6fd8","#8aa6ff","#c3d0f7","#edf1fd"]},
+      "surface": {"role":"neutral","displayName":"Paper","canonical":"#f5f7fa","tonalRamp":["#0b1628","#3a4657","#586474","#c7d0db","#e2e7ee","#eff2f6","#f5f7fa","#ffffff"]},
+      "allow": {"role":"semantic","displayName":"Allow Green","canonical":"#0b7348","tonalRamp":["#06402a","#0b7348","#3ccf94","#a9dbc4","#eaf6f0"]},
+      "block": {"role":"semantic","displayName":"Block Red","canonical":"#c0291b","tonalRamp":["#6b160e","#c0291b","#ff8a7d","#f2b8b0","#fdeeec"]},
+      "approval": {"role":"semantic","displayName":"Approval Amber","canonical":"#9c4f00","tonalRamp":["#5a2d00","#9c4f00","#f7c04a","#f2c990","#fff4e6"]},
+      "scam": {"role":"semantic","displayName":"Scam Violet","canonical":"#7429b6","tonalRamp":["#41155f","#7429b6","#c79bff","#d8bdf3","#f6effd"]}
+    },
+    "typographyMeta": {
+      "display": {"displayName":"Geist","purpose":"Verdict and page titles, 600 weight, tight tracking."},
+      "body": {"displayName":"Geist","purpose":"15px descriptions, 14px tables and controls."}
+    },
+    "shadows": [
+      {"name":"card","value":"0 1px 2px rgb(11 22 40 / 0.05), 0 2px 8px -2px rgb(11 22 40 / 0.06)","purpose":"Panels and banners."},
+      {"name":"raised","value":"0 2px 4px rgb(11 22 40 / 0.06), 0 12px 28px -8px rgb(11 22 40 / 0.14)","purpose":"Overlays only."}
+    ],
+    "motion": [
+      {"name":"ease-out-quart","value":"cubic-bezier(0.23, 1, 0.32, 1)","purpose":"All UI and keyframe easing."},
+      {"name":"gr-enter","value":"200ms","purpose":"Ledger row arrival."},
+      {"name":"gr-pop","value":"220ms","purpose":"Result icon settle."},
+      {"name":"gr-stamp","value":"260ms","purpose":"Verdict banner landing."}
+    ],
+    "breakpoints": [
+      {"name":"md","value":"768px"},
+      {"name":"lg","value":"1024px"}
+    ]
+  },
+  "components": [
+    {"name":"Primary Button","kind":"button","refersTo":"button-primary","description":"Single main action per panel.","html":"<button class=\"ds-btn\">Approve</button>","css":".ds-btn{height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--brand,#0e2240);color:#fff;font:600 14px Geist,system-ui,sans-serif;box-shadow:0 1px 2px rgb(11 22 40/.18),inset 0 1px 0 rgb(255 255 255/.08);transition:background-color 150ms,transform 150ms;cursor:pointer}.ds-btn:hover{background:rgb(14 34 64/.88)}.ds-btn:active{transform:scale(.98)}.ds-btn:focus-visible{outline:2px solid #2449c9;outline-offset:2px}"},
+    {"name":"Outcome Badge","kind":"chip","refersTo":"badge-allow","description":"Verdict pill: icon plus label.","html":"<span class=\"ds-badge\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m8 12 3 3 5-6\"/></svg>Allowed</span>","css":".ds-badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border:1px solid #a9dbc4;border-radius:9999px;background:#eaf6f0;color:#0b7348;font:600 12px Geist,system-ui,sans-serif}"},
+    {"name":"Card","kind":"card","refersTo":"card","description":"Raised white panel.","html":"<div class=\"ds-card\"><strong>Policy</strong><p>Spend limits for this agent.</p></div>","css":".ds-card{padding:20px;border:1px solid #e2e7ee;border-radius:10px;background:#fff;color:#0b1628;box-shadow:0 1px 2px rgb(11 22 40/.05),0 2px 8px -2px rgb(11 22 40/.06);font:14px Geist,system-ui,sans-serif}.ds-card p{margin:4px 0 0;color:#3a4657}"},
+    {"name":"Nav Item (active)","kind":"nav","refersTo":"nav-item-active","description":"Sidebar row.","html":"<a class=\"ds-nav\" aria-current=\"page\">Purchasing</a>","css":".ds-nav{display:flex;align-items:center;height:36px;padding:0 10px;border-radius:8px;background:#edf1fd;color:#2449c9;font:600 14px Geist,system-ui,sans-serif}"},
+    {"name":"Verdict Banner","kind":"custom","refersTo":"badge-block","description":"Decision result, icon plus words.","html":"<div class=\"ds-verdict\" role=\"status\"><span class=\"ds-icon\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M8 3h8l5 5v8l-5 5H8l-5-5V8z\"/><path d=\"m9 9 6 6M15 9l-6 6\"/></svg></span><div><p>Blocked</p><span>Over the monthly limit.</span></div></div>","css":".ds-verdict{display:flex;gap:20px;padding:20px 24px;border:1px solid #f2b8b0;border-radius:10px;background:#fdeeec;color:#c0291b;font-family:Geist,system-ui,sans-serif;box-shadow:0 1px 2px rgb(11 22 40/.05)}.ds-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:9999px;background:#fff}.ds-verdict p{margin:0;font-size:28px;line-height:36px;font-weight:600;letter-spacing:-.02em}.ds-verdict span{color:#0b1628;font-size:15px}"}
+  ],
+  "narrative": {
+    "northStar": "The Auditable Ledger",
+    "overview": "A payments-console register: cool paper-grey canvas, white panels, ink-navy for the one primary action, and four fixed verdict colours that carry product meaning.",
+    "keyCharacteristics": ["Restrained palette with one cobalt accent","Verdicts always icon plus words","Hairline borders and soft shadow","One orchestrated motion moment per decision"],
+    "rules": [
+      {"name":"The Never-Colour-Alone Rule","body":"Every verdict pairs colour with a distinct icon shape and a text label.","section":"colors"},
+      {"name":"The Fixed Meaning Rule","body":"Allow/block/approval/scam colours are never reused for decoration or brand accents.","section":"colors"},
+      {"name":"The Tabular Money Rule","body":"Amounts and counts use tabular-nums.","section":"typography"},
+      {"name":"The Quiet Shadow Rule","body":"Shadows are soft, low-opacity, ink-tinted. No hard offset or coloured shadows.","section":"elevation"},
+      {"name":"The One Moment Rule","body":"Rows arrive as checks resolve, the icon settles, the verdict lands once. Nothing else animates on its own.","section":"motion"}
+    ],
+    "dos": ["Do pair every verdict colour with its icon and words.","Do use token classes, never raw hex in components.","Do keep body text at 14px or above and verdicts large enough for 125% zoom video.","Do keep the cobalt accent for interactive state only."],
+    "donts": ["Don't imitate PayPal's logo, wordmark, or colours.","Don't use verdict colours as decoration or the accent as a verdict.","Don't add ambient or looping animation, or motion that hides content when it fails to run.","Don't introduce hard offset shadows, gradients, or side-stripe borders."]
+  }
+}

@@ -5,17 +5,17 @@ import { Slot } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-[var(--ease-out-quart)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-[var(--ease-out-quart)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/92",
-        destructive: "bg-block text-white shadow-xs hover:bg-block/92",
+        default: "bg-brand text-brand-foreground shadow-[0_1px_2px_rgb(11_22_40/0.18),inset_0_1px_0_rgb(255_255_255/0.08)] hover:bg-brand/88",
+        destructive: "bg-block text-white shadow-[0_1px_2px_rgb(11_22_40/0.18)] hover:bg-block/90",
         outline:
-          "border border-border bg-surface-raised text-ink shadow-2xs hover:bg-surface-subtle",
+          "border border-border-strong/80 bg-surface-raised text-ink shadow-[0_1px_2px_rgb(11_22_40/0.06)] hover:bg-surface-subtle",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "text-ink-secondary hover:bg-surface-subtle hover:text-ink",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-accent-ink underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

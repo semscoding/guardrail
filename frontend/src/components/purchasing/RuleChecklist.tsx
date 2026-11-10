@@ -57,9 +57,9 @@ export function RuleChecklist({ checks, proposal }: { checks: Check[]; proposal:
   const failed = checks.filter((c) => !c.passed && c.ruleId !== "R9").length;
 
   return (
-    <section aria-labelledby="ledger-title" className="rounded-lg border border-border-strong bg-surface-raised">
+    <section aria-labelledby="ledger-title" className="overflow-hidden rounded-lg border border-border bg-surface-raised shadow-card">
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-card py-4">
-        <h2 id="ledger-title" className="text-lg font-semibold text-ink">
+        <h2 id="ledger-title" className="text-base font-semibold text-ink">
           Checked against the real order
         </h2>
         <p className="text-sm text-ink-secondary" aria-live="polite">
@@ -75,7 +75,7 @@ export function RuleChecklist({ checks, proposal }: { checks: Check[]; proposal:
         <caption className="sr-only">
           Each policy rule, what the agent claimed, and what the source of truth shows
         </caption>
-        <thead className="hidden text-left text-xs text-ink-muted md:table-header-group">
+        <thead className="hidden bg-surface text-left text-xs uppercase tracking-[0.04em] text-ink-muted md:table-header-group">
           <tr className="border-b border-border">
             <th scope="col" className="px-card py-2 font-medium">Rule</th>
             <th scope="col" className="px-3 py-2 font-medium">Agent said</th>
@@ -98,12 +98,12 @@ export function RuleChecklist({ checks, proposal }: { checks: Check[]; proposal:
                 className={cn(
                   "grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-border px-card py-3 last:border-b-0 md:table-row md:p-0",
                   check && "gr-enter",
-                  state === "fail" && "bg-block-soft/60",
-                  state === "approval" && "bg-approval-soft/60",
+                  state === "fail" && "bg-block-soft/50",
+                  state === "approval" && "bg-approval-soft/50",
                 )}
               >
                 <th scope="row" className="text-left font-normal md:px-card md:py-3 md:align-top">
-                  <span className="font-mono text-xs text-ink-muted">{ruleId}</span>{" "}
+                  <span className="mr-1.5 inline-flex h-5 min-w-8 items-center justify-center rounded border border-border bg-surface px-1 font-mono text-xs font-medium text-ink-secondary">{ruleId}</span>
                   <span className="font-medium text-ink">{RULE_LABELS[ruleId]}</span>
                   {check ? <span className="mt-0.5 block text-ink-secondary">{check.explanation}</span> : null}
                 </th>
@@ -114,7 +114,7 @@ export function RuleChecklist({ checks, proposal }: { checks: Check[]; proposal:
                       <span className="text-ink-secondary md:sr-only">Agent said: </span>
                       <span
                         className={cn(
-                          isMachineData(claim) && "font-mono tabular-nums",
+                          isMachineData(claim) && "font-medium tabular-nums",
                           contradicted ? "text-ink-muted line-through decoration-block decoration-2" : "text-ink",
                         )}
                       >
@@ -137,12 +137,12 @@ export function RuleChecklist({ checks, proposal }: { checks: Check[]; proposal:
                       <span
                         className={cn(
                           check.actual ? "text-ink" : "font-medium text-block",
-                          check.actual && isMachineData(check.actual) && "font-mono tabular-nums",
+                          check.actual && isMachineData(check.actual) && "font-medium tabular-nums",
                         )}
                       >
                         {check.actual ?? "No evidence"}
                       </span>
-                      <span className="block text-xs text-ink-muted">{SOURCE_LABELS[check.source]}</span>
+                      <span className="block text-[13px] text-ink-muted">{SOURCE_LABELS[check.source]}</span>
                     </span>
                   ) : (
                     <span className="hidden md:inline" aria-hidden="true">
@@ -152,8 +152,8 @@ export function RuleChecklist({ checks, proposal }: { checks: Check[]; proposal:
                 </td>
 
                 <td className="col-start-2 row-start-1 text-right md:px-card md:py-3 md:align-top">
-                  <span className={cn("inline-flex items-center gap-1.5 font-semibold", meta.className)}>
-                    <Icon aria-hidden="true" className={cn("size-4", state !== "pending" && "gr-pop")} />
+                  <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold", meta.className, state === "pass" && "bg-allow-soft", state === "fail" && "bg-block-soft", state === "approval" && "bg-approval-soft")}>
+                    <Icon aria-hidden="true" className={cn("size-3.5", state !== "pending" && "gr-pop")} />
                     {meta.text}
                   </span>
                 </td>

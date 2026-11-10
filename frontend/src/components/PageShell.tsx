@@ -9,7 +9,7 @@ export function PageShell({ children, className }: { children: ReactNode; classN
       id="main-content"
       tabIndex={-1}
       className={cn(
-        "mx-auto flex w-full max-w-[var(--container-shell)] flex-1 flex-col gap-section px-4 py-page-y focus:outline-none md:px-page-x",
+        "mx-auto flex w-full max-w-[84rem] flex-1 flex-col gap-section px-4 py-6 focus:outline-none md:px-8 md:py-8",
         className,
       )}
     >

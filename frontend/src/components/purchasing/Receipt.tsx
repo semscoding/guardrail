@@ -15,7 +15,7 @@ const STATUS_TEXT: Record<PaymentSummary["status"], string> = {
 export function Receipt({ payment }: { payment: PaymentSummary }) {
   // [term, value, is machine data (set in mono)]
   const rows: [string, string, boolean][] = [
-    ["Amount", formatMoney(payment.amount), true],
+    ["Amount", formatMoney(payment.amount), false],
     ["Status", STATUS_TEXT[payment.status], false],
     ["Payee", payment.payeeEmail ?? "Unknown", true],
     ["PayPal order", payment.orderId, true],
@@ -24,15 +24,15 @@ export function Receipt({ payment }: { payment: PaymentSummary }) {
   ];
 
   return (
-    <section aria-labelledby="receipt-title" className="rounded-lg border border-border bg-surface-raised p-card">
+    <section aria-labelledby="receipt-title" className="rounded-lg border border-border bg-surface-raised shadow-card p-card">
       <h2 id="receipt-title" className="text-base font-semibold text-ink">
         PayPal receipt
       </h2>
-      <dl className="mt-3 grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1.5 text-sm">
+      <dl className="mt-3 grid grid-cols-[9rem_1fr] text-sm">
         {rows.map(([term, value, data]) => (
           <div key={term} className="contents">
-            <dt className="text-ink-secondary">{term}</dt>
-            <dd className={cn("break-all text-ink", data && "font-mono tabular-nums")}>{value}</dd>
+            <dt className="border-t border-border py-2.5 text-ink-secondary">{term}</dt>
+            <dd className={cn("break-all border-t border-border py-2.5 text-ink tabular-nums", data ? "font-mono text-sm" : "font-medium")}>{value}</dd>
           </div>
         ))}
       </dl>

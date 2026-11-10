@@ -13,12 +13,20 @@ function isRouteActive(pathname: string, href: NavItem["href"]): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppNav() {
+/** Vertical in the desktop sidebar, a five-up tab row on small screens. */
+export function AppNav({
+  orientation = "vertical",
+  label = "Primary",
+}: {
+  orientation?: "vertical" | "horizontal";
+  label?: string;
+}) {
   const pathname = usePathname();
+  const vertical = orientation === "vertical";
 
   return (
-    <nav aria-label="Primary" className="w-full md:w-auto">
-      <ul className="grid grid-cols-5 gap-1 md:flex md:items-center md:gap-1">
+    <nav aria-label={label} className="w-full">
+      <ul className={vertical ? "flex flex-col gap-0.5" : "grid grid-cols-5 gap-1"}>
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = isRouteActive(pathname, href);
 
@@ -28,17 +36,20 @@ export function AppNav() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[11px] leading-tight transition-[background-color,color] duration-150 ease-[var(--ease-out-quart)] md:flex-row md:gap-2 md:px-3 md:py-1.5 md:text-sm",
+                  "group flex items-center rounded-md transition-[background-color,color] duration-150 ease-[var(--ease-out-quart)]",
+                  vertical
+                    ? "h-9 gap-3 px-2.5 text-sm"
+                    : "flex-col justify-center gap-1 px-1 py-2 text-[11px] leading-tight",
                   active
-                    ? "bg-surface-subtle font-semibold text-ink after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
-                    : "font-medium text-ink-secondary hover:bg-surface-subtle/70 hover:text-ink"
+                    ? "bg-accent-soft font-semibold text-accent-ink"
+                    : "font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink",
                 )}
               >
                 <Icon
                   aria-hidden="true"
                   className={cn(
-                    "size-4 shrink-0",
-                    active ? "text-brand stroke-[2.25]" : "text-ink-muted"
+                    "size-[18px] shrink-0 stroke-[1.75]",
+                    active ? "text-accent-ink" : "text-ink-muted group-hover:text-ink-secondary",
                   )}
                 />
                 <span className="truncate">{label}</span>

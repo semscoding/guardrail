@@ -101,7 +101,7 @@ export function DisputeDesk({ disputes: initial, now, live = false }: { disputes
 
   return (
     <div className="grid items-start gap-section lg:grid-cols-[minmax(16rem,20rem)_1fr]">
-      <section aria-labelledby="queue-title" className="rounded-lg border border-border bg-surface-raised">
+      <section aria-labelledby="queue-title" className="rounded-lg border border-border bg-surface-raised shadow-card">
         <h2 id="queue-title" className="border-b border-border px-card py-3 text-base font-semibold text-ink">
           Open disputes
         </h2>
@@ -190,9 +190,9 @@ function DisputeDetail({
 
   return (
     <div className="flex min-w-0 flex-col gap-section">
-      <section aria-labelledby="evidence-title" className="rounded-lg border border-border bg-surface-raised p-card">
+      <section aria-labelledby="evidence-title" className="rounded-lg border border-border bg-surface-raised shadow-card p-card">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="evidence-title" className="text-lg font-semibold text-ink">
+          <h2 id="evidence-title" className="text-base font-semibold text-ink">
             {REASONS[dispute.reason]} · {formatMoney(dispute.amount)}
           </h2>
           {dispute.sellerResponseDue ? (
@@ -222,9 +222,9 @@ function DisputeDetail({
       </section>
 
       {dossier ? (
-        <section aria-labelledby="dossier-title" className="rounded-lg border border-border-strong bg-surface-raised p-card">
+        <section aria-labelledby="dossier-title" className="rounded-lg border border-border-strong bg-surface-raised shadow-card p-card">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="dossier-title" className="text-lg font-semibold text-ink">
+            <h2 id="dossier-title" className="text-base font-semibold text-ink">
               Response to PayPal, draft {dossier.version}
             </h2>
             {dossier.strength === "STRONG" ? (
@@ -301,7 +301,7 @@ function DisputeDetail({
           ) : null}
         </section>
       ) : (
-        <section className="flex flex-col items-start gap-3 rounded-lg border border-border bg-surface-raised p-card">
+        <section className="flex flex-col items-start gap-3 rounded-lg border border-border bg-surface-raised shadow-card p-card">
           <p className="text-sm text-ink-secondary">
             No response drafted yet. GUARDRAIL collects the evidence first, then drafts a response that cites it.
           </p>

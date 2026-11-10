@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Check, RotateCcw, Sparkles } from "lucide-react";
+import { Check, RotateCcw, ShieldAlert, Sparkles } from "lucide-react";
 import { ENDPOINTS } from "@guardrail/apis/contracts";
 import type { PolicyVersion } from "@guardrail/apis/domain";
 import { mockRuns } from "@guardrail/apis/mocks";
@@ -35,12 +35,17 @@ async function post<T>(url: string, schema: { safeParse: (v: unknown) => { succe
 export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
   const { view, state, streamError, start, resume, reset, lastSeq } = useRunStream(sseRunSource);
   const [command, setCommand] = useState("");
+  // Demo setting: simulate an agent that a shop page has fooled. Always labelled as a simulation.
+  const [compromised, setCompromised] = useState(false);
+  const [runCompromised, setRunCompromised] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [approving, setApproving] = useState(false);
   const [approveError, setApproveError] = useState<string | null>(null);
   const inputId = useId();
   const hintId = useId();
+  const modeId = useId();
+  const modeHintId = useId();
   const streaming = state === "streaming" || submitting;
   const started = state !== "idle";
   const awaitingApproval =
@@ -58,10 +63,13 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
       const res = await post(
         "/api/runs",
         CreateRunResponse,
-        { policyId: policy.policyId, command: command.trim() },
+        { policyId: policy.policyId, command: command.trim(), agentMode: compromised ? "compromised" : "standard" },
       );
       if ("error" in res) setFormError(res.error.message);
-      else start(res.data.runId);
+      else {
+        setRunCompromised(compromised);
+        start(res.data.runId);
+      }
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Could not start the agent.");
     } finally {
@@ -89,17 +97,18 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
     setCommand("");
     setFormError(null);
     setApproveError(null);
+    setRunCompromised(false);
   }
 
   return (
     <div className="grid items-start gap-section lg:grid-cols-[minmax(18rem,22rem)_1fr]">
-      <div className="lg:sticky lg:top-[calc(var(--spacing-header)+1.5rem)]">
+      <div className="lg:sticky lg:top-14 lg:max-h-[calc(100dvh-4.5rem)] lg:overflow-auto lg:rounded-lg">
         <PolicyCard policy={policy} />
       </div>
 
       <div className="flex min-w-0 flex-col gap-section">
-        <form onSubmit={submit} className="rounded-lg border border-border bg-surface-raised p-card">
-          <label htmlFor={inputId} className="text-base font-semibold text-ink">
+        <form onSubmit={submit} className="rounded-lg border border-border bg-surface-raised shadow-card p-card">
+          <label htmlFor={inputId} className="text-base font-semibold tracking-[-0.01em] text-ink">
             What should the agent buy?
           </label>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
@@ -111,15 +120,15 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
               aria-describedby={hintId}
               aria-invalid={formError ? true : undefined}
               placeholder="Restock our first-aid kit, under €100."
-              className="h-10 min-w-0 flex-1 rounded-md border border-border-strong bg-surface-raised px-3 text-base text-ink placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
+              className="gr-field h-11 min-w-0 flex-1 px-3.5 text-base"
             />
             <div className="flex gap-2">
-              <Button type="submit" size="lg" disabled={streaming || !command.trim()} className="flex-1 sm:flex-none">
+              <Button type="submit" size="lg" className="h-11 flex-1 sm:flex-none" disabled={streaming || !command.trim()}>
                 <Sparkles aria-hidden="true" />
                 {streaming ? "Agent working…" : "Send to agent"}
               </Button>
               {started ? (
-                <Button type="button" size="lg" variant="outline" onClick={restart} disabled={streaming}>
+                <Button type="button" size="lg" variant="outline" className="h-11" onClick={restart} disabled={streaming}>
                   <RotateCcw aria-hidden="true" />
                   Start over
                 </Button>
@@ -138,11 +147,31 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
                   setCommand(r.command);
                   setFormError(null);
                 }}
-                className="rounded-md border border-border bg-surface-subtle px-2.5 py-1 text-ink hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
+                className="rounded-full border border-border bg-surface px-3 py-1 text-ink transition-colors duration-150 hover:border-accent-ink/40 hover:bg-accent-soft hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
               >
                 {r.command}
               </button>
             ))}
+          </div>
+          <div className="mt-4 flex items-start gap-2.5 border-t border-border pt-3">
+            <input
+              id={modeId}
+              type="checkbox"
+              checked={compromised}
+              onChange={(e) => setCompromised(e.target.checked)}
+              disabled={streaming}
+              aria-describedby={modeHintId}
+              className="mt-0.5 size-4 shrink-0 accent-scam focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            />
+            <div className="text-sm">
+              <label htmlFor={modeId} className="font-medium text-ink">
+                Simulate a compromised agent
+              </label>
+              <p id={modeHintId} className="text-ink-secondary">
+                Demo setting: the agent is told to trust shop pages and follow their instructions, to show what GUARDRAIL
+                catches when an AI is fooled.
+              </p>
+            </div>
           </div>
           {formError ? (
             <p role="alert" className="mt-3 text-sm text-block">
@@ -159,13 +188,10 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
 
         {started ? (
           <>
-            <AgentStream steps={view.steps} startedAt={view.startedAt} streaming={streaming} />
-            {view.proposal || view.checks.length ? (
-              <RuleChecklist checks={view.checks} proposal={view.proposal} />
-            ) : null}
-            {view.error ? (
-              <p role="alert" className="rounded-lg border border-block-border bg-block-soft p-card text-sm text-block">
-                {view.error.message}
+            {runCompromised ? (
+              <p className="flex items-center gap-2 rounded-lg border border-scam-border bg-scam-soft px-card py-3 text-sm font-semibold text-scam">
+                <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
+                Simulated compromised agent: it follows shop instructions on purpose. The policy engine is unchanged.
               </p>
             ) : null}
             {view.decision ? <DecisionBanner decision={view.decision} payment={view.payment} /> : null}
@@ -179,6 +205,15 @@ export function PurchasingWorkspace({ policy }: { policy: PolicyVersion }) {
                   {approving ? "Capturing…" : "Approve and pay"}
                 </Button>
               </div>
+            ) : null}
+            <AgentStream steps={view.steps} startedAt={view.startedAt} streaming={streaming} />
+            {view.proposal || view.checks.length ? (
+              <RuleChecklist checks={view.checks} proposal={view.proposal} />
+            ) : null}
+            {view.error ? (
+              <p role="alert" className="rounded-lg border border-block-border bg-block-soft p-card text-sm text-block">
+                {view.error.message}
+              </p>
             ) : null}
             {approveError ? (
               <p role="alert" className="text-sm text-block">

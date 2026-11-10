@@ -27,28 +27,28 @@ export function PolicyCard({ policy }: { policy: PolicyVersion }) {
   return (
     <section
       aria-labelledby="policy-title"
-      className="rounded-lg border border-border bg-surface-raised p-card"
+      className="rounded-lg border border-border bg-surface-raised shadow-card p-card"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id="policy-title" className="text-lg font-semibold text-ink">
+        <h2 id="policy-title" className="text-base font-semibold tracking-[-0.01em] text-ink">
           {policy.name}
         </h2>
-        <span className="text-xs text-ink-muted">Version {policy.version}</span>
+        <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-ink-secondary">Version {policy.version}</span>
       </div>
       <p className="mt-1 text-sm text-ink-secondary">
         The agent can only spend within these rules. It can read them, never change them.
       </p>
 
-      <ol className="mt-4 space-y-2.5">
+      <ol className="mt-4 divide-y divide-border border-y border-border">
         {ruleSentences(policy).map(([id, sentence]) => (
-          <li key={id} id={`rule-${id}`} className="grid scroll-mt-24 grid-cols-[2.5rem_1fr] gap-2 rounded text-sm target:bg-approval-soft">
-            <span className="font-mono text-xs leading-5 text-ink-muted">{id}</span>
-            <span className="text-ink">{sentence}</span>
+          <li key={id} id={`rule-${id}`} className="grid scroll-mt-24 grid-cols-[2.75rem_1fr] items-start gap-2 py-2 text-sm target:bg-approval-soft">
+            <span className="mt-px inline-flex h-5 w-fit min-w-8 items-center justify-center rounded border border-border bg-surface px-1 font-mono text-xs font-medium text-ink-secondary">{id}</span>
+            <span className="leading-5 text-ink">{sentence}</span>
           </li>
         ))}
       </ol>
 
-      <p className="mt-5 flex items-center gap-2 border-t border-border pt-4 text-sm text-ink-secondary">
+      <p className="mt-4 flex items-center gap-2 text-sm text-ink-secondary">
         {policy.paypalLinked ? (
           <>
             <Link2 aria-hidden="true" className="size-4 text-allow" />

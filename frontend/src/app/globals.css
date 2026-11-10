@@ -1,74 +1,96 @@
 @import "tailwindcss";
 
+/* GUARDRAIL tokens. Restrained: cool neutrals, ink-navy primary, one cobalt accent for links,
+   focus and selection. Semantic verdict colours are fixed product meaning; never colour alone. */
 :root {
-  /* Core ledger surfaces & ink (WCAG 2.2 AA verified >= 4.5:1) */
-  --surface: #f7f8fa;
+  --surface: #f5f7fa;
   --surface-raised: #ffffff;
-  --surface-subtle: #eef1f5;
+  --surface-subtle: #eff2f6;
+  --surface-sidebar: #fbfcfd;
 
-  --ink: #0f172a;
-  --ink-secondary: #334155;
-  --ink-muted: #475569;
+  --ink: #0b1628;
+  --ink-secondary: #3a4657;
+  --ink-muted: #586474;
 
-  --border: #dce1e8;
-  --border-strong: #b8c2cf;
-  --brand: #0b3b66;
+  --border: #e2e7ee;
+  --border-strong: #c7d0db;
+  --border-input: #838fa0;
+  --brand: #0e2240;
   --brand-foreground: #ffffff;
-  --ring: #0b3b66;
+  --accent-ink: #2449c9;
+  --accent-soft: #edf1fd;
+  --ring: #2449c9;
 
-  /* Semantic policy & shield verdict tokens */
-  --allow: #0f6e4b;
-  --allow-soft: #e8f6f0;
-  --allow-border: #9bd6be;
+  --allow: #0b7348;
+  --allow-soft: #eaf6f0;
+  --allow-border: #a9dbc4;
 
-  --block: #c81e1e;
-  --block-soft: #fdecec;
-  --block-border: #f5b1b1;
+  --block: #c0291b;
+  --block-soft: #fdeeec;
+  --block-border: #f2b8b0;
 
-  --approval: #9a4d00;
-  --approval-soft: #fef4e6;
-  --approval-border: #f3c68f;
+  --approval: #9c4f00;
+  --approval-soft: #fff4e6;
+  --approval-border: #f2c990;
 
-  --scam: #6b21a8;
-  --scam-soft: #f5eefd;
-  --scam-border: #d5b4f7;
+  --scam: #7429b6;
+  --scam-soft: #f6effd;
+  --scam-border: #d8bdf3;
+
+  --sandbox: #7a4a00;
+  --sandbox-soft: #fff1d6;
+  --sandbox-border: #f1d29a;
+
+  --shadow-card: 0 1px 2px rgb(11 22 40 / 0.05), 0 2px 8px -2px rgb(11 22 40 / 0.06);
+  --shadow-raised: 0 2px 4px rgb(11 22 40 / 0.06), 0 12px 28px -8px rgb(11 22 40 / 0.14);
 
   /* Motion curves */
   --ease-out-quart: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-/* Future dark-mode token layer (opt-in via .dark on html; light mode is authoritative for demo) */
+/* Dark layer (opt-in via .dark on html; light mode is authoritative for the demo) */
 .dark {
-  --surface: #0b111b;
-  --surface-raised: #111927;
-  --surface-subtle: #182234;
+  --surface: #0a111c;
+  --surface-raised: #111a28;
+  --surface-subtle: #172233;
+  --surface-sidebar: #0d1521;
 
-  --ink: #f1f5f9;
-  --ink-secondary: #cbd5e1;
-  --ink-muted: #94a3b8;
+  --ink: #eef2f7;
+  --ink-secondary: #c3cddb;
+  --ink-muted: #94a2b5;
 
-  --border: #243247;
-  --border-strong: #384b66;
-  --brand: #5ba4e6;
-  --brand-foreground: #08111d;
-  --ring: #5ba4e6;
+  --border: #223047;
+  --border-strong: #354763;
+  --border-input: #61728d;
+  --brand: #e8eef8;
+  --brand-foreground: #0a111c;
+  --accent-ink: #8aa6ff;
+  --accent-soft: #18244a;
+  --ring: #8aa6ff;
 
-  --allow: #34d399;
+  --allow: #3ccf94;
   --allow-soft: #0c2e24;
   --allow-border: #195c47;
 
-  --block: #f87171;
+  --block: #ff8a7d;
   --block-soft: #361417;
   --block-border: #6e2429;
 
-  --approval: #fbbf24;
+  --approval: #f7c04a;
   --approval-soft: #332209;
   --approval-border: #684612;
 
-  --scam: #c084fc;
+  --scam: #c79bff;
   --scam-soft: #29153d;
   --scam-border: #552c7d;
+
+  --sandbox: #f7c04a;
+  --sandbox-soft: #2a1f08;
+  --sandbox-border: #5a4413;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-raised: 0 12px 28px -8px rgb(0 0 0 / 0.5);
 }
 
 @theme inline {
@@ -98,6 +120,14 @@
   --color-ink-muted: var(--ink-muted);
 
   --color-brand: var(--brand);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-surface-sidebar: var(--surface-sidebar);
+  --color-sandbox: var(--sandbox);
+  --color-sandbox-soft: var(--sandbox-soft);
+  --color-sandbox-border: var(--sandbox-border);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
   --color-brand-foreground: var(--brand-foreground);
   --color-border-strong: var(--border-strong);
 
@@ -123,8 +153,8 @@
   --color-ring: var(--ring);
 
   /* Typography & modular type scale */
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --text-xs: 0.75rem;
   --text-xs--line-height: 1.125rem;
@@ -136,10 +166,10 @@
   --text-lg--line-height: 1.625rem;
   --text-xl: 1.3125rem;
   --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.625rem;
-  --text-2xl--line-height: 2.0625rem;
-  --text-3xl: 2rem;
-  --text-3xl--line-height: 2.4375rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
   --text-display: 2.5rem;
   --text-display--line-height: 2.875rem;
 
@@ -151,6 +181,7 @@
   --spacing-card: 1.25rem;
   --spacing-cluster: 0.75rem;
   --spacing-header: 3.5rem;
+  --spacing-sidebar: 15.5rem;
 
   --container-shell: 88rem;
 
@@ -177,12 +208,38 @@
     background-color: var(--surface);
     color: var(--ink);
     font-family: var(--font-sans);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "ss01", "cv11";
+    letter-spacing: -0.006em;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--accent-ink) 22%, transparent);
+    color: var(--ink);
+  }
+
+  input, textarea {
+    caret-color: var(--accent-ink);
+  }
+
+  a {
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+
+  /* Money and counts line up in columns everywhere. */
+  .tabular, td, [data-amount] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  html {
+    scrollbar-color: var(--border-strong) transparent;
+    scrollbar-width: thin;
   }
 
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
@@ -199,21 +256,43 @@
 
 /* GUARDRAIL motion: one orchestrated moment. Ledger rows enter as their check arrives,
    the result icon settles, and the verdict lands once. Nothing else moves on its own. */
+/* One field style for every text input, select and textarea. */
+@layer components {
+  .gr-field {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-input);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    box-shadow: inset 0 1px 2px rgb(11 22 40 / 0.04);
+    transition: border-color 150ms var(--ease-out-quart), box-shadow 150ms var(--ease-out-quart);
+  }
+  .gr-field::placeholder { color: var(--ink-muted); }
+  .gr-field:hover:not(:disabled) { border-color: var(--ink-muted); }
+  .gr-field:focus-visible {
+    outline: none;
+    border-color: var(--accent-ink);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .gr-field:disabled { opacity: 0.6; }
+}
+
+/* Every keyframe starts visible: if an animation never runs (background tab, paused timeline),
+   the content is still there. Motion only adds the settle. */
 @keyframes gr-enter {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0.45; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes gr-pop {
-  from { transform: scale(0.6); opacity: 0; }
+  from { transform: scale(0.7); opacity: 0.5; }
   to { transform: none; opacity: 1; }
 }
 @keyframes gr-stamp {
-  from { transform: scale(0.98); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  from { transform: scale(0.985); box-shadow: 0 0 0 0 rgb(11 22 40 / 0); }
+  to { transform: none; }
 }
-.gr-enter { animation: gr-enter 200ms var(--ease-out-quart) both; }
-.gr-pop { animation: gr-pop 220ms var(--ease-out-quart) both; }
-.gr-stamp { animation: gr-stamp 260ms var(--ease-out-quart) both; }
+.gr-enter { animation: gr-enter 200ms var(--ease-out-quart); }
+.gr-pop { animation: gr-pop 220ms var(--ease-out-quart); }
+.gr-stamp { animation: gr-stamp 260ms var(--ease-out-quart); }
 
 @media (prefers-reduced-motion: reduce) {
   .gr-enter, .gr-pop, .gr-stamp { animation: none; }
