@@ -17,7 +17,7 @@ Picture the volunteer treasurer of an amateur football club. Every month she buy
 | Pillar | What happens | PayPal APIs |
 |---|---|---|
 | **1. Autonomous purchasing** | Claude searches the demo shops and proposes one purchase. GUARDRAIL creates the PayPal order with the vaulted wallet, checks rules R1–R10 against the order itself, then captures or voids the authorization. Above €250 the treasurer approves first. | Orders v2 (vault, intent AUTHORIZE), authorizations capture/void, verified webhooks |
-| **2. Invoice Shield** | Paste or upload an incoming invoice. Fixed rules plus Claude flag refund scams, impersonation and off-platform payment lures, highlighted in the text. A blocked payee lands on a denylist that rule R10 enforces on every future purchase. | payee denylist feeds the purchasing policy |
+| **2. Invoice Guard** | Paste or upload an incoming invoice. Fixed rules plus Claude flag refund scams, impersonation and off-platform payment lures, highlighted in the text. A blocked payee lands on a denylist that rule R10 enforces on every future purchase. | payee denylist feeds the purchasing policy |
 | **3. Dispute Defender** | When a buyer opens a dispute on a club-shop sale, GUARDRAIL collects the evidence (order, tracking, address) and drafts a response where every sentence cites its evidence. Nothing is sent until the treasurer approves. | Disputes v1 (`provide-evidence`), dispute webhooks |
 | **Audit log** | Every decision, rule, source and outcome in one append-only, hash-chained log (AG Grid), exportable to CSV. | — |
 
