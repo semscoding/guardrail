@@ -7,7 +7,7 @@ An AI agent that buys on your behalf, inside a spending policy it cannot bypass.
 Built for the [PayPal AI Hackathon 2026](https://paypalaihackathon.devpost.com/). Everything runs on the **PayPal sandbox**: no real money moves.
 
 - **Live demo:** https://guardrail-luid.onrender.com
-- **Demo video:** _YouTube link added at submission_
+- **Demo video:** https://youtu.be/4LPOKtNM1J8
 - **License:** [MIT](LICENSE)
 
 ## The problem
